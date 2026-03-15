@@ -1,0 +1,17 @@
+# Environment variables
+.env
+.env.local
+.env.*
+
+# Keys and certificates
+*.pem
+*.key
+*.p12
+*.pfx
+keys/
+certs/
+
+# Custom credential files
+secrets.json
+credentials.yml
+config/database_passwords.txt
