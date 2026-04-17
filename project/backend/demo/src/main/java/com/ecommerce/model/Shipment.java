@@ -7,6 +7,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -25,9 +26,12 @@ public class Shipment {
     @JoinColumn(name = "order_id")
     private Order order;
 
+    @NotBlank(message = "Warehouse block must be specified")
     private String warehouse; // Örn: Block A, Block B
+    
+    @NotBlank(message = "Shipment mode must be specified")
     private String mode; // Örn: Flight, Ship, Road
+    
+    @NotBlank(message = "Shipment status is mandatory")
     private String status; // Örn: Delivered, In Transit
-
-    // TODO: Sağ tıklayıp Getter ve Setter'ları oluştur
 }
