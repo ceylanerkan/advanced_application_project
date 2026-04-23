@@ -5,14 +5,8 @@ import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import com.ecommerce.model.Shipment;
 import com.ecommerce.service.ShipmentService;
@@ -29,34 +23,34 @@ public class ShipmentController {
 
     private final ShipmentService shipmentService;
 
-    @Operation(summary = "Get all shipments", description = "Retrieves a complete list of all shipments.")
+    @Operation(summary = "Get all shipments", description = "Returns shipments related to the authenticated user.")
     @GetMapping
-    public ResponseEntity<List<Shipment>> getAllShipments() {
-        return ResponseEntity.ok(shipmentService.getAllShipments());
+    public ResponseEntity<List<Shipment>> getAllShipments(Authentication authentication) {
+        return ResponseEntity.ok(shipmentService.getAllShipments(authentication.getName()));
     }
 
-    @Operation(summary = "Get a shipment by ID", description = "Retrieves the details of a specific shipment.")
+    @Operation(summary = "Get a shipment by ID")
     @GetMapping("/{id}")
-    public ResponseEntity<Shipment> getShipmentById(@PathVariable Long id) {
-        return ResponseEntity.ok(shipmentService.getShipmentById(id));
+    public ResponseEntity<Shipment> getShipmentById(@PathVariable Long id, Authentication authentication) {
+        return ResponseEntity.ok(shipmentService.getShipmentByIdSecurely(id, authentication.getName()));
     }
 
-    @Operation(summary = "Create a new shipment", description = "Creates a new shipment record. Validates required fields before saving.")
+    @Operation(summary = "Create a new shipment (Admin/Corporate)")
     @PostMapping
-    public ResponseEntity<Shipment> createShipment(@Valid @RequestBody Shipment shipment) {
-        return new ResponseEntity<>(shipmentService.createShipment(shipment), HttpStatus.CREATED);
+    public ResponseEntity<Shipment> createShipment(@Valid @RequestBody Shipment shipment, Authentication authentication) {
+        return new ResponseEntity<>(shipmentService.createShipment(shipment, authentication.getName()), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Update an existing shipment", description = "Updates a shipment by its ID. Validates required fields.")
+    @Operation(summary = "Update an existing shipment (Admin/Corporate)")
     @PutMapping("/{id}")
-    public ResponseEntity<Shipment> updateShipment(@PathVariable Long id, @Valid @RequestBody Shipment shipmentDetails) {
-        return ResponseEntity.ok(shipmentService.updateShipment(id, shipmentDetails));
+    public ResponseEntity<Shipment> updateShipment(@PathVariable Long id, @Valid @RequestBody Shipment shipmentDetails, Authentication authentication) {
+        return ResponseEntity.ok(shipmentService.updateShipment(id, shipmentDetails, authentication.getName()));
     }
 
-    @Operation(summary = "Delete a shipment", description = "Deletes a specific shipment by its ID.")
+    @Operation(summary = "Delete a shipment (Admin only)")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteShipment(@PathVariable Long id) {
-        shipmentService.deleteShipment(id);
+    public ResponseEntity<Void> deleteShipment(@PathVariable Long id, Authentication authentication) {
+        shipmentService.deleteShipment(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }

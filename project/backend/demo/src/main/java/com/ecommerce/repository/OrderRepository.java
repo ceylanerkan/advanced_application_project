@@ -10,4 +10,5 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     
     // Finds all orders linked to a user with this specific customerId
     List<Order> findByUser_CustomerId(String customerId);
+    
 }

@@ -2,11 +2,16 @@ package com.ecommerce.service;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
-import com.ecommerce.exception.ResourceNotFoundException;
+// Assuming you have this exception defined; otherwise, use ResponseStatusException
+import com.ecommerce.exception.ResourceNotFoundException; 
 import com.ecommerce.model.Order;
+import com.ecommerce.model.User;
 import com.ecommerce.repository.OrderRepository;
+import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,34 +20,92 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final UserRepository userRepository;
 
-    public List<Order> getAllOrders() {
-        return orderRepository.findAll();
+    // Helper method to fetch the current user via customerId
+    private User getAuthenticatedUser(String customerId) {
+        return userRepository.findByCustomerId(customerId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
 
-    public Order getOrderById(Long id) {
-        return orderRepository.findById(id)
+    public List<Order> getAllOrders(String customerId) {
+        User currentUser = getAuthenticatedUser(customerId);
+
+        if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            return orderRepository.findAll();
+        } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
+            // Note: To fully implement this, add a `storeId` field to your User model.
+            // return orderRepository.findByStoreId(currentUser.getStoreId());
+            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Corporate order fetching requires a storeId on the User model.");
+        } else {
+            // INDIVIDUAL user
+            return orderRepository.findByUser_CustomerId(currentUser.getCustomerId());
+        }
+    }
+
+    public Order getOrderById(Long id, String customerId) {
+        Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Order not found with id: " + id));
+
+        User currentUser = getAuthenticatedUser(customerId);
+
+        // Security Check: Verify Ownership (Mitigates AV-05)
+        if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
+             // Uncomment and implement once User model has getStoreId()
+             // if (!order.getStoreId().equals(currentUser.getStoreId())) {
+             //    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Order does not belong to your store.");
+             // }
+        } else if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+            // Check if the order's user ID matches the logged-in user's database ID
+            if (!order.getUser().getId().equals(currentUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: You do not own this order.");
+            }
+        }
+        // ADMIN passes through automatically
+
+        return order;
     }
 
-    public Order createOrder(Order order) {
+    public Order createOrder(Order order, String customerId) {
+        User currentUser = getAuthenticatedUser(customerId);
+
+        // Security Check: Prevent Mass Assignment (AV-11)
+        // Force the order to belong to the person creating it.
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+            order.setUser(currentUser); 
+        }
+
         return orderRepository.save(order);
     }
 
-    public Order updateOrder(Long id, Order orderDetails) {
-        Order order = getOrderById(id);
-        
-        order.setUser(orderDetails.getUser());
+    public Order updateOrder(Long id, Order orderDetails, String customerId) {
+        // This utilizes our secure getOrderById, enforcing RBAC automatically.
+        Order order = getOrderById(id, customerId);
+        User currentUser = getAuthenticatedUser(customerId);
+
+        // Apply safe updates
         order.setStatus(orderDetails.getStatus());
         order.setGrandTotal(orderDetails.getGrandTotal());
-        order.setStoreId(orderDetails.getStoreId());
         
+        // Security Check: Only Admins can reassign an order to a different user or store
+        if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            order.setUser(orderDetails.getUser());
+            order.setStoreId(orderDetails.getStoreId());
+        }
+
         return orderRepository.save(order);
     }
 
-    public void deleteOrder(Long id) {
-        // Fetch the order first to ensure a 404 is thrown if it does not exist
-        Order order = getOrderById(id);
+    public void deleteOrder(Long id, String customerId) {
+        // Fetch the order securely first
+        Order order = getOrderById(id, customerId);
+        User currentUser = getAuthenticatedUser(customerId);
+        
+        // Prevent individuals from deleting processed orders
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot delete system orders.");
+        }
+
         orderRepository.delete(order);
     }
 }

@@ -2,11 +2,15 @@ package com.ecommerce.service;
 
 import java.util.List;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.model.Shipment;
+import com.ecommerce.model.User;
 import com.ecommerce.repository.ShipmentRepository;
+import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
@@ -15,25 +19,48 @@ import lombok.RequiredArgsConstructor;
 public class ShipmentService {
 
     private final ShipmentRepository shipmentRepository;
+    private final UserRepository userRepository;
 
-    public List<Shipment> getAllShipments() {
-        return shipmentRepository.findAll();
+    public List<Shipment> getAllShipments(String customerId) {
+        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+
+        if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            return shipmentRepository.findAll();
+        }
+        // If they aren't admin, ideally they query by userId or storeId via custom Repository methods
+        throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Need custom query method to fetch user specific shipments");
     }
 
-    public Shipment getShipmentById(Long id) {
-        return shipmentRepository.findById(id)
+    public Shipment getShipmentByIdSecurely(Long id, String customerId) {
+        Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with id: " + id));
+        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+
+        // Mitigate AV-05: Ensure shipment's order belongs to user
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+            if (!shipment.getOrder().getUser().getId().equals(currentUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Shipment does not belong to you");
+            }
+        }
+        return shipment;
     }
 
-    public Shipment createShipment(Shipment shipment) {
+    public Shipment createShipment(Shipment shipment, String customerId) {
+        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot create shipments.");
+        }
         return shipmentRepository.save(shipment);
     }
 
-    public Shipment updateShipment(Long id, Shipment shipmentDetails) {
-        Shipment shipment = getShipmentById(id);
+    public Shipment updateShipment(Long id, Shipment shipmentDetails, String customerId) {
+        Shipment shipment = getShipmentByIdSecurely(id, customerId);
+        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot update shipments.");
+        }
         
-        // Update fields
-        shipment.setOrder(shipmentDetails.getOrder());
         shipment.setWarehouse(shipmentDetails.getWarehouse());
         shipment.setMode(shipmentDetails.getMode());
         shipment.setStatus(shipmentDetails.getStatus());
@@ -41,9 +68,13 @@ public class ShipmentService {
         return shipmentRepository.save(shipment);
     }
 
-    public void deleteShipment(Long id) {
-        // Optional: Check if it exists before deleting to throw the 404 properly
-        Shipment shipment = getShipmentById(id);
+    public void deleteShipment(Long id, String customerId) {
+        Shipment shipment = getShipmentByIdSecurely(id, customerId);
+        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Admins can delete shipments.");
+        }
         shipmentRepository.delete(shipment);
     }
 }

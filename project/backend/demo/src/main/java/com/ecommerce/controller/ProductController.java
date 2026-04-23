@@ -5,19 +5,15 @@ import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import com.ecommerce.model.Product;
 import com.ecommerce.service.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 
@@ -29,7 +25,7 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @Operation(summary = "Get all products", description = "Retrieves a complete list of all products in the catalog.")
+    @Operation(summary = "Get all products", description = "Retrieves a complete list of all products. Open to all users.")
     @GetMapping
     public ResponseEntity<List<Product>> getAllProducts() {
         return ResponseEntity.ok(productService.getAllProducts());
@@ -41,22 +37,26 @@ public class ProductController {
         return ResponseEntity.ok(productService.getProductById(id));
     }
 
-    @Operation(summary = "Create a new product", description = "Adds a new product to the catalog. Validates required fields before saving.")
+    @Operation(summary = "Create a new product", description = "Adds a new product. Restricted to ADMIN and CORPORATE users.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "Product created successfully"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Individuals cannot create products")
+    })
     @PostMapping
-    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product) {
-        return new ResponseEntity<>(productService.createProduct(product), HttpStatus.CREATED);
+    public ResponseEntity<Product> createProduct(@Valid @RequestBody Product product, Authentication authentication) {
+        return new ResponseEntity<>(productService.createProduct(product, authentication.getName()), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Update an existing product", description = "Updates a product by its ID. Validates required fields.")
+    @Operation(summary = "Update an existing product", description = "Updates a product. Restricted to ADMIN and CORPORATE users.")
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product productDetails) {
-        return ResponseEntity.ok(productService.updateProduct(id, productDetails));
+    public ResponseEntity<Product> updateProduct(@PathVariable Long id, @Valid @RequestBody Product productDetails, Authentication authentication) {
+        return ResponseEntity.ok(productService.updateProduct(id, productDetails, authentication.getName()));
     }
 
-    @Operation(summary = "Delete a product", description = "Deletes a specific product by its ID.")
+    @Operation(summary = "Delete a product", description = "Deletes a specific product. Restricted to ADMIN and CORPORATE users.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteProduct(@PathVariable Long id) {
-        productService.deleteProduct(id);
+    public ResponseEntity<Void> deleteProduct(@PathVariable Long id, Authentication authentication) {
+        productService.deleteProduct(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }

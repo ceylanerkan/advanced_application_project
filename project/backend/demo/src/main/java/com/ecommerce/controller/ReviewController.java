@@ -5,14 +5,8 @@ import java.util.List;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
 import com.ecommerce.model.Review;
 import com.ecommerce.service.ReviewService;
@@ -29,34 +23,34 @@ public class ReviewController {
 
     private final ReviewService reviewService;
 
-    @Operation(summary = "Get all reviews", description = "Retrieves a complete list of all reviews in the system.")
+    @Operation(summary = "Get all reviews", description = "Publicly accessible list of reviews.")
     @GetMapping
     public ResponseEntity<List<Review>> getAllReviews() {
         return ResponseEntity.ok(reviewService.getAllReviews());
     }
 
-    @Operation(summary = "Get a review by ID", description = "Retrieves the details of a specific review.")
+    @Operation(summary = "Get a review by ID")
     @GetMapping("/{id}")
     public ResponseEntity<Review> getReviewById(@PathVariable Long id) {
         return ResponseEntity.ok(reviewService.getReviewById(id));
     }
 
-    @Operation(summary = "Create a new review", description = "Creates a new product review. Validates required fields before saving.")
+    @Operation(summary = "Create a new review", description = "Creates a review securely. Mitigates AV-04 (Stored XSS) and AV-11 (Mass Assignment).")
     @PostMapping
-    public ResponseEntity<Review> createReview(@Valid @RequestBody Review review) {
-        return new ResponseEntity<>(reviewService.createReview(review), HttpStatus.CREATED);
+    public ResponseEntity<Review> createReview(@Valid @RequestBody Review review, Authentication authentication) {
+        return new ResponseEntity<>(reviewService.createReview(review, authentication.getName()), HttpStatus.CREATED);
     }
 
-    @Operation(summary = "Update an existing review", description = "Updates a review by its ID. Validates required fields.")
+    @Operation(summary = "Update a review", description = "Updates your own review. XSS sanitized.")
     @PutMapping("/{id}")
-    public ResponseEntity<Review> updateReview(@PathVariable Long id, @Valid @RequestBody Review reviewDetails) {
-        return ResponseEntity.ok(reviewService.updateReview(id, reviewDetails));
+    public ResponseEntity<Review> updateReview(@PathVariable Long id, @Valid @RequestBody Review reviewDetails, Authentication authentication) {
+        return ResponseEntity.ok(reviewService.updateReview(id, reviewDetails, authentication.getName()));
     }
 
-    @Operation(summary = "Delete a review", description = "Deletes a specific review by its ID.")
+    @Operation(summary = "Delete a review", description = "Delete your own review or any if Admin.")
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteReview(@PathVariable Long id) {
-        reviewService.deleteReview(id);
+    public ResponseEntity<Void> deleteReview(@PathVariable Long id, Authentication authentication) {
+        reviewService.deleteReview(id, authentication.getName());
         return ResponseEntity.noContent().build();
     }
 }
