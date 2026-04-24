@@ -1,0 +1,60 @@
+<div class="dashboard-container">
+  <aside class="sidebar glass-panel">
+    <h3>Individual Panel</h3>
+    <nav>
+      <ul>
+        <li><a class="active">My Profile</a></li>
+        <li><a routerLink="/chat">AI Assistant</a></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <p>{{ userEmail }}</p>
+      <button class="btn btn-outline" (click)="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="header">
+      <h2>Welcome Back!</h2>
+      <p>View your purchase history and personal insights.</p>
+    </header>
+
+    <div class="kpi-grid grid grid-cols-3">
+      <div class="glass-panel kpi-card">
+        <h4>Total Orders</h4>
+        <h2>12</h2>
+        <span class="text-success">+2 this month</span>
+      </div>
+      <div class="glass-panel kpi-card">
+        <h4>Total Spent</h4>
+        <h2>$1,250</h2>
+        <span class="text-secondary">Lifetime</span>
+      </div>
+      <div class="glass-panel kpi-card">
+        <h4>Reviews Left</h4>
+        <h2>5</h2>
+        <span class="text-success">Avg 4.8 stars</span>
+      </div>
+    </div>
+
+    <div class="charts-grid grid grid-cols-2">
+      <div class="glass-panel chart-container animate-fade-in">
+        <h4>My Spend History</h4>
+        <canvas baseChart
+          [type]="'line'"
+          [data]="spendData"
+          [options]="chartOptions">
+        </canvas>
+      </div>
+
+      <div class="glass-panel chart-container animate-fade-in">
+        <h4>Purchases by Category</h4>
+        <canvas baseChart
+          [type]="'doughnut'"
+          [data]="categoryData"
+          [options]="doughnutOptions">
+        </canvas>
+      </div>
+    </div>
+  </main>
+</div>

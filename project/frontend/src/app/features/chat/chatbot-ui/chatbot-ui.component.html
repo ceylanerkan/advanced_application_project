@@ -1,0 +1,46 @@
+<div class="dashboard-container">
+  <aside class="sidebar glass-panel">
+    <h3>AI Assistant</h3>
+    <nav>
+      <ul>
+        <li><a (click)="goBack()">Back to Dashboard</a></li>
+      </ul>
+    </nav>
+  </aside>
+
+  <main class="content chat-layout">
+    <div class="chat-window glass-panel">
+      <div class="chat-messages" #scrollContainer>
+        @for (msg of messages; track msg.id) {
+          <div class="message-wrapper" [class.user]="msg.isUser">
+            <div class="message-bubble">
+              <div class="message-text" [innerHTML]="msg.text | safeHtml"></div>
+              
+              <!-- Plotly Chart Rendering -->
+              @if (msg.plotData) {
+                <div class="plotly-container">
+                  <plotly-plot 
+                    [data]="msg.plotData.data" 
+                    [layout]="msg.plotData.layout"
+                    [useResizeHandler]="true"
+                    [style]="{position: 'relative', width: '100%', height: '300px'}">
+                  </plotly-plot>
+                </div>
+              }
+            </div>
+          </div>
+        }
+      </div>
+      
+      <div class="chat-input-area">
+        <input 
+          type="text" 
+          [(ngModel)]="userInput" 
+          (keyup.enter)="sendMessage()"
+          placeholder="Ask a question about your data (try typing 'revenue')..." 
+          class="chat-input">
+        <button class="btn btn-primary" (click)="sendMessage()">Send</button>
+      </div>
+    </div>
+  </main>
+</div>

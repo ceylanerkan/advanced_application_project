@@ -1,10 +1,6 @@
 package com.ecommerce.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,33 +14,19 @@ public class Review {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Review ID cannot be blank")
-    @Column(unique = true, nullable = false)
-    private String reviewId; // Amazon'daki yorum ID'si
-
-    // Foreign Key: Yorumu yapan kullanıcı
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    // Foreign Key: Yorum yapılan ürün
-    @ManyToOne
-    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    @NotNull(message = "Star rating is required")
-    @Min(value = 1, message = "Star rating must be at least 1")
-    @Max(value = 5, message = "Star rating cannot exceed 5")
+    @Column(name = "star_rating")
     private Integer starRating;
 
-    // ADDED THIS: The actual text of the review (needed for XSS testing)
-    @NotBlank(message = "Review comment cannot be empty")
-    @Column(columnDefinition = "TEXT")
-    private String comment; 
+    private String sentiment;
 
-    private Integer helpfulVotes = 0; // Good practice to default to 0
-    private Integer totalVotes = 0;
-
-    @Column(length = 50)
-    private String sentiment; // Al'ın dolduracağı duygu durumu
+    @Column(name = "created_at")
+    private String createdAt; // ISO 8601 String
 }

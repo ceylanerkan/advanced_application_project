@@ -1,7 +1,6 @@
 package com.ecommerce.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -15,17 +14,29 @@ public class Product {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Product ID (Amazon ID) cannot be blank")
-    @Column(unique = true, nullable = false)
-    private String productId; // Amazon'daki ürün ID'si (Örn: B0000...)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
 
-    @NotBlank(message = "Product name cannot be empty")
-    @Column(nullable = false)
-    private String name; // Amazon'daki ProductTitle
-
-    // Foreign Key: Bir ürünün bir kategorisi olur
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "category_id")
     private Category category;
 
+    @Column(nullable = false, unique = true)
+    private String sku;
+
+    @Column(nullable = false, length = 250)
+    private String name;
+
+    @Column(name = "unit_price", nullable = false)
+    private Double unitPrice;
+
+    @Column(name = "base_currency")
+    private String baseCurrency;
+
+    @Column(name = "original_currency")
+    private String originalCurrency;
+
+    @Column(name = "exchange_rate")
+    private Double exchangeRate;
 }

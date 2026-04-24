@@ -1,15 +1,6 @@
 package com.ecommerce.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -23,20 +14,28 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // Siparişi hangi kullanıcı verdi? (Foreign Key)
-    @NotNull(message = "User must be specified for the order")
-    @ManyToOne
-    @JoinColumn(name = "user_id")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @NotBlank(message = "Order status is mandatory")
-    private String status; // Örn: Completed, Canceled, Pending
-    
-    @NotNull(message = "Grand total cannot be null")
-    @Min(value = 0, message = "Grand total cannot be negative")
-    private Double grandTotal; // Toplam tutar
-    
-    // İleride kurumsal mağazalar eklenirse diye tutuyoruz
-    @NotNull(message = "Store ID must be specified")
-    private Long storeId; 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "store_id", nullable = false)
+    private Store store;
+
+    private String status;
+
+    @Column(name = "grand_total")
+    private Double grandTotal;
+
+    @Column(name = "base_currency")
+    private String baseCurrency;
+
+    @Column(name = "original_currency")
+    private String originalCurrency;
+
+    @Column(name = "exchange_rate")
+    private Double exchangeRate;
+
+    @Column(name = "created_at")
+    private String createdAt; // ISO 8601 String
 }
