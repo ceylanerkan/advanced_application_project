@@ -13,7 +13,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/chat")
+// CHANGED: Renamed from /api/chat to /api/ai-chat to resolve mapping conflict
+@RequestMapping("/api/ai-chat") 
 public class AIChatController {
 
     @Autowired
@@ -23,8 +24,6 @@ public class AIChatController {
     public ResponseEntity<AIResponseDTO> askAI(@RequestBody AIRequestDTO requestDTO) {
         try {
             // STEP 3: ENFORCE BACKEND SECURITY CONTEXT
-            // We ignore any ID passed by the client. We ONLY extract the ID and Role from 
-            // the verified Spring Security Context (JWT validated).
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             
             if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof User)) {
@@ -57,7 +56,6 @@ public class AIChatController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new AIResponseDTO(null, null, "error", "An internal system error occurred."));
         } catch (Exception ex) {
-            // No stack traces are ever leaked back to the client
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(new AIResponseDTO(null, null, "error", "An unexpected error occurred."));
         }
