@@ -8,7 +8,7 @@ import java.util.List;
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
     
-    // Finds all orders linked to a user with this specific customerId
-    List<Order> findByUser_CustomerId(String customerId);
+    // Finds all orders linked to a user with this specific email
+    List<Order> findByUser_Email(String email);
     
 }

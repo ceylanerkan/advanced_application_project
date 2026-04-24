@@ -71,7 +71,7 @@ class CategoryControllerTest {
 
     @Test
     void createCategory_ShouldReturn201() throws Exception {
-        Mockito.when(categoryService.createCategory(any(Category.class))).thenReturn(testCategory);
+        Mockito.when(categoryService.createCategory(any(Category.class), Mockito.anyString())).thenReturn(testCategory);
 
         mockMvc.perform(post("/api/categories")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -82,7 +82,7 @@ class CategoryControllerTest {
 
     @Test
     void updateCategory_ShouldReturn200() throws Exception {
-        Mockito.when(categoryService.updateCategory(eq(1L), any(Category.class))).thenReturn(testCategory);
+        Mockito.when(categoryService.updateCategory(eq(1L), any(Category.class), Mockito.anyString())).thenReturn(testCategory);
 
         mockMvc.perform(put("/api/categories/1")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -93,7 +93,7 @@ class CategoryControllerTest {
 
     @Test
     void deleteCategory_ShouldReturn204() throws Exception {
-        Mockito.doNothing().when(categoryService).deleteCategory(1L);
+        Mockito.doNothing().when(categoryService).deleteCategory(eq(1L), Mockito.anyString());
 
         mockMvc.perform(delete("/api/categories/1"))
                 .andExpect(status().isNoContent());

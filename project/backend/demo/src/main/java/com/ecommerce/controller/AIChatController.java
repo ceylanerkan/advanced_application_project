@@ -5,27 +5,39 @@ import com.ecommerce.model.dto.AIPayloadDTO;
 import com.ecommerce.model.dto.AIRequestDTO;
 import com.ecommerce.model.dto.AIResponseDTO;
 import com.ecommerce.service.AICommunicationService;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+
 @RestController
-// CHANGED: Renamed from /api/chat to /api/ai-chat to resolve mapping conflict
-@RequestMapping("/api/ai-chat") 
+@RequestMapping("/api/ai-chat")
+@RequiredArgsConstructor
+@Tag(name = "AI Chatbot", description = "Endpoints for the Multi-Agent Text2SQL AI Chatbot")
 public class AIChatController {
 
-    @Autowired
-    private AICommunicationService aiCommunicationService;
+    private final AICommunicationService aiCommunicationService;
 
+    @Operation(summary = "Ask the AI a question", description = "Processes a natural language query through the LangGraph AI agents and returns insights or visualizations.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Successful AI response"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token"),
+            @ApiResponse(responseCode = "500", description = "AI service error")
+    })
     @PostMapping("/ask")
     public ResponseEntity<AIResponseDTO> askAI(@RequestBody AIRequestDTO requestDTO) {
         try {
-            // STEP 3: ENFORCE BACKEND SECURITY CONTEXT
+            // ENFORCE BACKEND SECURITY CONTEXT
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            
+
             if (authentication == null || !authentication.isAuthenticated() || !(authentication.getPrincipal() instanceof User)) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(
                     new AIResponseDTO(null, null, "error", "Unauthorized access")
@@ -34,11 +46,11 @@ public class AIChatController {
 
             User currentUser = (User) authentication.getPrincipal();
 
-            // STEP 4: BUILD AI COMMUNICATION SERVICE
+            // BUILD SECURE AI PAYLOAD
             AIPayloadDTO payload = new AIPayloadDTO();
             payload.setQuestion(requestDTO.getQuestion());
             payload.setSessionId(requestDTO.getSessionId());
-            
+
             // INJECT VERIFIED SECURITY DATA
             payload.setCurrentUserId(currentUser.getId());
             payload.setCurrentUserRole(currentUser.getRoleType());
@@ -48,7 +60,7 @@ public class AIChatController {
             return ResponseEntity.ok(response);
 
         } catch (RuntimeException ex) {
-            // STEP 6: IMPLEMENT GRACEFUL ERROR HANDLING
+            // GRACEFUL ERROR HANDLING
             if ("AI_SERVICE_ERROR".equals(ex.getMessage())) {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                         .body(new AIResponseDTO(null, null, "error", "The AI service is currently unavailable."));

@@ -21,8 +21,8 @@ public class ShipmentService {
     private final ShipmentRepository shipmentRepository;
     private final UserRepository userRepository;
 
-    public List<Shipment> getAllShipments(String customerId) {
-        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+    public List<Shipment> getAllShipments(String email) {
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
 
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
             return shipmentRepository.findAll();
@@ -31,10 +31,10 @@ public class ShipmentService {
         throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Need custom query method to fetch user specific shipments");
     }
 
-    public Shipment getShipmentByIdSecurely(Long id, String customerId) {
+    public Shipment getShipmentByIdSecurely(Long id, String email) {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with id: " + id));
-        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
 
         // Mitigate AV-05: Ensure shipment's order belongs to user
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
@@ -45,17 +45,17 @@ public class ShipmentService {
         return shipment;
     }
 
-    public Shipment createShipment(Shipment shipment, String customerId) {
-        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+    public Shipment createShipment(Shipment shipment, String email) {
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot create shipments.");
         }
         return shipmentRepository.save(shipment);
     }
 
-    public Shipment updateShipment(Long id, Shipment shipmentDetails, String customerId) {
-        Shipment shipment = getShipmentByIdSecurely(id, customerId);
-        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+    public Shipment updateShipment(Long id, Shipment shipmentDetails, String email) {
+        Shipment shipment = getShipmentByIdSecurely(id, email);
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
 
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot update shipments.");
@@ -68,9 +68,9 @@ public class ShipmentService {
         return shipmentRepository.save(shipment);
     }
 
-    public void deleteShipment(Long id, String customerId) {
-        Shipment shipment = getShipmentByIdSecurely(id, customerId);
-        User currentUser = userRepository.findByCustomerId(customerId).orElseThrow();
+    public void deleteShipment(Long id, String email) {
+        Shipment shipment = getShipmentByIdSecurely(id, email);
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
 
         if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only Admins can delete shipments.");

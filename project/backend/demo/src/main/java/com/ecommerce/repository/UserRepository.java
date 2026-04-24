@@ -8,6 +8,5 @@ import java.util.Optional;
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
     
-    // Updated to match the "customerId" field in your User entity
-    Optional<User> findByCustomerId(String customerId);
+    Optional<User> findByEmail(String email);
 }

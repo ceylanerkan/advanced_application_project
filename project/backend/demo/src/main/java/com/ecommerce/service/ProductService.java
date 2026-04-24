@@ -30,8 +30,8 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
     }
 
-    private void verifyWriteAccess(String customerId) {
-        User currentUser = userRepository.findByCustomerId(customerId)
+    private void verifyWriteAccess(String email) {
+        User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
@@ -39,30 +39,29 @@ public class ProductService {
         }
     }
 
-    public Product createProduct(Product product, String customerId) {
-        verifyWriteAccess(customerId);
-        
-        // NOTE FOR YOUR PROJECT: To fully satisfy AV-05 (BOLA) for Corporate users, 
-        // your Product model needs a `storeId` field so you can lock Corporate users to only creating/editing 
-        // products for their specific store. Once added, you would inject it here:
-        // if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) { product.setStoreId(currentUser.getStoreId()); }
-
+    public Product createProduct(Product product, String email) {
+        verifyWriteAccess(email);
         return productRepository.save(product);
     }
 
-    public Product updateProduct(Long id, Product productDetails, String customerId) {
-        verifyWriteAccess(customerId);
+    public Product updateProduct(Long id, Product productDetails, String email) {
+        verifyWriteAccess(email);
         Product product = getProductById(id);
         
-        product.setProductId(productDetails.getProductId());
-        product.setName(productDetails.getName());
+        product.setStore(productDetails.getStore());
         product.setCategory(productDetails.getCategory());
+        product.setSku(productDetails.getSku());
+        product.setName(productDetails.getName());
+        product.setUnitPrice(productDetails.getUnitPrice());
+        product.setBaseCurrency(productDetails.getBaseCurrency());
+        product.setOriginalCurrency(productDetails.getOriginalCurrency());
+        product.setExchangeRate(productDetails.getExchangeRate());
         
         return productRepository.save(product);
     }
 
-    public void deleteProduct(Long id, String customerId) {
-        verifyWriteAccess(customerId);
+    public void deleteProduct(Long id, String email) {
+        verifyWriteAccess(email);
         Product product = getProductById(id);
         productRepository.delete(product);
     }

@@ -39,7 +39,7 @@ public class OrderController {
     })
     @GetMapping
     public ResponseEntity<List<Order>> getAllOrders(Authentication authentication) {
-        // authentication.getName() returns the customerId based on your UserDetails implementation
+        // authentication.getName() returns the email based on your UserDetails implementation
         return ResponseEntity.ok(orderService.getAllOrders(authentication.getName()));
     }
 

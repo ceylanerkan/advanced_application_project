@@ -30,8 +30,8 @@ public class CategoryService {
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
     }
 
-    private void verifyAdminAccess(String customerId) {
-        User currentUser = userRepository.findByCustomerId(customerId)
+    private void verifyAdminAccess(String email) {
+        User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
         if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
@@ -39,22 +39,23 @@ public class CategoryService {
         }
     }
 
-    public Category createCategory(Category category, String customerId) {
-        verifyAdminAccess(customerId);
+    public Category createCategory(Category category, String email) {
+        verifyAdminAccess(email);
         return categoryRepository.save(category);
     }
 
-    public Category updateCategory(Long id, Category categoryDetails, String customerId) {
-        verifyAdminAccess(customerId);
+    public Category updateCategory(Long id, Category categoryDetails, String email) {
+        verifyAdminAccess(email);
         Category category = getCategoryById(id);
         
         category.setName(categoryDetails.getName());
+        category.setParentCategory(categoryDetails.getParentCategory());
         
         return categoryRepository.save(category);
     }
 
-    public void deleteCategory(Long id, String customerId) {
-        verifyAdminAccess(customerId);
+    public void deleteCategory(Long id, String email) {
+        verifyAdminAccess(email);
         Category category = getCategoryById(id);
         categoryRepository.delete(category);
     }

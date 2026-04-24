@@ -56,7 +56,7 @@ class OrderControllerTest {
 
     @Test
     void getAllOrders_ShouldReturn200() throws Exception {
-        Mockito.when(orderService.getAllOrders()).thenReturn(Arrays.asList(testOrder));
+        Mockito.when(orderService.getAllOrders(Mockito.anyString())).thenReturn(Arrays.asList(testOrder));
         mockMvc.perform(get("/api/orders"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("Completed"));
