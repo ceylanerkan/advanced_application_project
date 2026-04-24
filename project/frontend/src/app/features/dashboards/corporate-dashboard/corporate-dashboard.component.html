@@ -1,0 +1,60 @@
+<div class="dashboard-container">
+  <aside class="sidebar glass-panel">
+    <h3>Corporate Panel</h3>
+    <nav>
+      <ul>
+        <li><a class="active">Store Overview</a></li>
+        <li><a routerLink="/chat">AI Text2SQL Chat</a></li>
+      </ul>
+    </nav>
+    <div class="user-info">
+      <p>{{ userEmail }}</p>
+      <button class="btn btn-outline" (click)="logout()">Logout</button>
+    </div>
+  </aside>
+
+  <main class="content">
+    <header class="header">
+      <h2>Store Analytics</h2>
+      <p>Performance metrics for your stores.</p>
+    </header>
+
+    <div class="kpi-grid grid grid-cols-3">
+      <div class="glass-panel kpi-card">
+        <h4>Monthly Sales</h4>
+        <h2>$45,230</h2>
+        <span class="text-success">+8% this month</span>
+      </div>
+      <div class="glass-panel kpi-card">
+        <h4>Orders Fulfilled</h4>
+        <h2>1,204</h2>
+        <span class="text-warning">-1% this month</span>
+      </div>
+      <div class="glass-panel kpi-card">
+        <h4>Avg Rating</h4>
+        <h2>4.7 / 5</h2>
+        <span class="text-success">+0.2 this month</span>
+      </div>
+    </div>
+
+    <div class="charts-grid grid grid-cols-2">
+      <div class="glass-panel chart-container animate-fade-in">
+        <h4>Daily Revenue</h4>
+        <canvas baseChart
+          [type]="'bar'"
+          [data]="barChartData"
+          [options]="chartOptions">
+        </canvas>
+      </div>
+
+      <div class="glass-panel chart-container animate-fade-in">
+        <h4>Sales by Category</h4>
+        <canvas baseChart
+          [type]="'pie'"
+          [data]="pieChartData"
+          [options]="pieOptions">
+        </canvas>
+      </div>
+    </div>
+  </main>
+</div>

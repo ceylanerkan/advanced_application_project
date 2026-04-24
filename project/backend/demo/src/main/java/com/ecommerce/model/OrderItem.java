@@ -7,25 +7,26 @@ import lombok.Setter;
 @Getter
 @Setter
 @Entity
-@Table(name = "orders")
-public class Order {
+@Table(name = "order_items")
+public class OrderItem {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    @JoinColumn(name = "order_id", nullable = false)
+    private Order order;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "store_id", nullable = false)
-    private Store store;
+    @JoinColumn(name = "product_id", nullable = false)
+    private Product product;
 
-    private String status;
+    @Column(nullable = false)
+    private Integer quantity;
 
-    @Column(name = "grand_total")
-    private Double grandTotal;
+    @Column(nullable = false)
+    private Double price;
 
     @Column(name = "base_currency")
     private String baseCurrency;
@@ -35,7 +36,4 @@ public class Order {
 
     @Column(name = "exchange_rate")
     private Double exchangeRate;
-
-    @Column(name = "created_at")
-    private String createdAt; // ISO 8601 String
 }

@@ -1,0 +1,31 @@
+<div class="login-container">
+  <div class="glass-panel login-card animate-fade-in">
+    <div class="header">
+      <h2>Welcome Back</h2>
+      <p>Log in to your Analytics Dashboard</p>
+    </div>
+
+    <form (submit)="onSubmit($event)">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input type="email" id="email" [(ngModel)]="email" name="email" required placeholder="admin@example.com">
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input type="password" id="password" [(ngModel)]="password" name="password" required placeholder="••••••••">
+      </div>
+
+      <div class="form-group">
+        <label for="role">Select Role (Demo Purposes)</label>
+        <select id="role" [(ngModel)]="role" name="role">
+          <option value="ADMIN">Admin</option>
+          <option value="CORPORATE">Corporate</option>
+          <option value="INDIVIDUAL">Individual</option>
+        </select>
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">Sign In</button>
+    </form>
+  </div>
+</div>

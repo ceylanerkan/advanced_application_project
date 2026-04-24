@@ -1,0 +1,71 @@
+.chat-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-window {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: 0;
+}
+
+.chat-messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.message-wrapper {
+  display: flex;
+  width: 100%;
+  
+  &.user {
+    justify-content: flex-end;
+    
+    .message-bubble {
+      background-color: var(--accent-primary);
+      border-bottom-right-radius: 4px;
+    }
+  }
+  
+  &:not(.user) {
+    justify-content: flex-start;
+    
+    .message-bubble {
+      background-color: rgba(255, 255, 255, 0.1);
+      border-bottom-left-radius: 4px;
+    }
+  }
+}
+
+.message-bubble {
+  max-width: 70%;
+  padding: var(--spacing-md);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.plotly-container {
+  margin-top: var(--spacing-md);
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-sm);
+}
+
+.chat-input-area {
+  display: flex;
+  padding: var(--spacing-md);
+  border-top: 1px solid var(--glass-border);
+  gap: var(--spacing-sm);
+  background: rgba(15, 23, 42, 0.4);
+
+  .chat-input {
+    flex: 1;
+    margin-bottom: 0;
+  }
+}
