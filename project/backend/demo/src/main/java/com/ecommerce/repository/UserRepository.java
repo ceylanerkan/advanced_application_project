@@ -7,6 +7,7 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    
+
+    // Updated to match the "email" field in your User entity
     Optional<User> findByEmail(String email);
 }

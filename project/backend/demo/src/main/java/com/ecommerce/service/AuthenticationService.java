@@ -44,7 +44,7 @@ public class AuthenticationService {
 
         User user = new User();
         user.setEmail(request.getEmail());
-        user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
+        user.setPasswordHash(passwordEncoder.encode(request.getPasswordHash()));
         user.setRoleType(role.toUpperCase());
         user.setGender(request.getGender());
 
@@ -69,7 +69,7 @@ public class AuthenticationService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
                         request.getEmail(),
-                        request.getPassword()
+                        request.getPasswordHash()
                 )
         );
 

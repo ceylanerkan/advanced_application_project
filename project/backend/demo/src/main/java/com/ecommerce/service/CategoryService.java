@@ -49,7 +49,6 @@ public class CategoryService {
         Category category = getCategoryById(id);
         
         category.setName(categoryDetails.getName());
-        category.setParentCategory(categoryDetails.getParentCategory());
         
         return categoryRepository.save(category);
     }

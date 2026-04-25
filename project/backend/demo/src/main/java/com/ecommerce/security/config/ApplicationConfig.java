@@ -26,7 +26,7 @@ public class ApplicationConfig {
     public UserDetailsService userDetailsService() {
         // The 'username' variable here receives whatever the user types into the login prompt
         return username -> userRepository.findByEmail(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found with email: " + username));
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with ID: " + username));
     }
 
     @Bean
