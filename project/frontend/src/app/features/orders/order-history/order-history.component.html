@@ -1,0 +1,50 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>📋 Order History</h2>
+    <p>View and manage your past purchases.</p>
+  </header>
+
+  <div class="toolbar glass-panel">
+    <input type="text" placeholder="🔍 Search by Order ID..." [(ngModel)]="searchTerm" (input)="applyFilters()">
+    <select [(ngModel)]="statusFilter" (change)="applyFilters()">
+      <option value="">All Statuses</option>
+      <option value="Pending">Pending</option>
+      <option value="Processing">Processing</option>
+      <option value="Shipped">Shipped</option>
+      <option value="Delivered">Delivered</option>
+      <option value="Returned">Returned</option>
+    </select>
+    <button class="btn btn-outline" (click)="exportCSV()">📥 Export CSV</button>
+  </div>
+
+  <div class="glass-panel data-table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>Order ID</th>
+          <th>Store</th>
+          <th>Items</th>
+          <th>Total</th>
+          <th>Date</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of filteredOrders">
+          <td><strong>#{{ o.id }}</strong></td>
+          <td>{{ o.store.name }}</td>
+          <td>{{ o.itemCount }} item(s)</td>
+          <td>${{ o.grandTotal.toFixed(2) }}</td>
+          <td>{{ o.createdAt }}</td>
+          <td>
+            <span class="status-badge" [ngClass]="o.status.toLowerCase()">{{ o.status }}</span>
+          </td>
+          <td>
+            <button class="action-btn" (click)="trackOrder(o.id)">🚚 Track</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

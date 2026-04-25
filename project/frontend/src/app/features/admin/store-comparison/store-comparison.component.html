@@ -1,0 +1,14 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header"><h2>📈 Cross-Store Comparison</h2><p>Compare performance across all stores.</p></header>
+
+  <div class="charts-grid grid grid-cols-2">
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Revenue & Orders by Store</h4>
+      <canvas baseChart [type]="'bar'" [data]="revenueCompare" [options]="chartOptions"></canvas>
+    </div>
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Average Rating by Store</h4>
+      <canvas baseChart [type]="'bar'" [data]="ratingCompare" [options]="chartOptions"></canvas>
+    </div>
+  </div>
+</div>

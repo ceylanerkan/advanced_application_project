@@ -1,0 +1,73 @@
+<div class="page-content animate-fade-in" *ngIf="product">
+  <button class="btn btn-outline" (click)="goBack()" style="margin-bottom: var(--spacing-lg)">← Back to Catalog</button>
+
+  <div class="grid grid-cols-2" style="gap: 2rem;">
+    <div class="glass-panel" style="display: flex; align-items: center; justify-content: center; min-height: 400px; font-size: 6rem;">
+      📦
+    </div>
+
+    <div>
+      <span class="category-tag" style="margin-bottom: 0.5rem; display:inline-block">{{ product.category.name }}</span>
+      <h2 style="margin-top: 0.5rem;">{{ product.name }}</h2>
+      <p style="color: var(--text-secondary)">SKU: {{ product.sku }}</p>
+      <div class="stars" style="margin: 0.5rem 0;">{{ getStars(product.rating) }} <small>({{ product.rating }})</small></div>
+
+      <div class="price" style="font-size: 2rem; font-weight: 700; color: var(--accent-primary); margin: 1rem 0;">
+        ${{ product.unitPrice.toFixed(2) }}
+      </div>
+
+      <p>{{ product.description }}</p>
+
+      <div style="display: flex; align-items: center; gap: 1rem; margin-top: 1.5rem;">
+        <div class="cart-item">
+          <div class="qty-controls">
+            <button (click)="quantity = quantity > 1 ? quantity - 1 : 1">−</button>
+            <span style="min-width: 30px; text-align:center">{{ quantity }}</span>
+            <button (click)="quantity = quantity + 1">+</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" (click)="addToCart()">🛒 Add to Cart</button>
+      </div>
+
+      <div class="glass-panel" style="margin-top: 1.5rem; padding: 1rem;">
+        <p style="margin: 0; font-size: 0.85rem;"><strong>Store:</strong> {{ product.store.name }}</p>
+        <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem;"><strong>Currency:</strong> {{ product.baseCurrency }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviews Section -->
+  <div style="margin-top: 2rem;">
+    <h3>Customer Reviews ({{ reviews.length }})</h3>
+
+    <!-- Write Review -->
+    <div class="glass-panel" style="margin: 1rem 0;">
+      <h4 style="margin-bottom: 0.75rem;">Write a Review</h4>
+      <div class="form-group">
+        <label>Rating</label>
+        <select [(ngModel)]="newRating">
+          <option [value]="5">★★★★★ (5)</option>
+          <option [value]="4">★★★★☆ (4)</option>
+          <option [value]="3">★★★☆☆ (3)</option>
+          <option [value]="2">★★☆☆☆ (2)</option>
+          <option [value]="1">★☆☆☆☆ (1)</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Comment</label>
+        <textarea [(ngModel)]="newComment" rows="3" placeholder="Share your experience..."></textarea>
+      </div>
+      <button class="btn btn-primary" (click)="submitReview()">Submit Review</button>
+    </div>
+
+    <!-- Reviews List -->
+    <div class="glass-panel" *ngFor="let r of reviews" style="margin-bottom: 0.75rem; padding: 1rem;">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <strong>{{ r.user }}</strong>
+        <small style="color: var(--text-secondary)">{{ r.date }}</small>
+      </div>
+      <div class="stars">{{ getStars(r.rating) }}</div>
+      <p style="margin: 0.5rem 0 0 0;">{{ r.comment }}</p>
+    </div>
+  </div>
+</div>

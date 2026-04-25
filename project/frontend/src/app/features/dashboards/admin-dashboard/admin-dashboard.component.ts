@@ -9,7 +9,7 @@ import { ChartConfiguration, ChartOptions } from 'chart.js';
   standalone: true,
   imports: [RouterModule, NgChartsModule],
   templateUrl: './admin-dashboard.component.html',
-  styleUrls: ['./admin-dashboard.component.scss']
+  styleUrls: []
 })
 export class AdminDashboardComponent implements OnInit {
   userEmail = '';

@@ -1,0 +1,52 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div><h2>👤 User Management</h2><p>Create, suspend, and delete user accounts.</p></div>
+      <button class="btn btn-primary" (click)="showModal = true">+ Create User</button>
+    </div>
+  </header>
+
+  <div class="toolbar glass-panel">
+    <input type="text" placeholder="🔍 Search by email or role..." [(ngModel)]="searchTerm" (input)="applyFilter()">
+    <span style="color: var(--text-secondary); font-size:0.85rem;">{{ filteredUsers.length }} users</span>
+  </div>
+
+  <div class="glass-panel data-table-wrapper">
+    <table>
+      <thead><tr><th>ID</th><th>Email</th><th>Role</th><th>Gender</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let u of filteredUsers">
+          <td>{{ u.id }}</td>
+          <td><strong>{{ u.email }}</strong></td>
+          <td><span class="status-badge" [ngClass]="u.roleType === 'ADMIN' ? 'open' : u.roleType === 'CORPORATE' ? 'in-transit' : 'pending'">{{ u.roleType }}</span></td>
+          <td>{{ u.gender }}</td>
+          <td><span class="status-badge" [ngClass]="u.status === 'Active' ? 'active' : 'suspended'">{{ u.status }}</span></td>
+          <td>{{ u.createdAt }}</td>
+          <td>
+            <button class="action-btn" (click)="toggleStatus(u)">{{ u.status === 'Active' ? '⏸ Suspend' : '▶ Activate' }}</button>
+            <button class="action-btn danger" (click)="deleteUser(u.id)">🗑️</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">
+    <div class="glass-panel modal-content" (click)="$event.stopPropagation()">
+      <h3>Create New User</h3>
+      <div class="form-group"><label>Email</label><input [(ngModel)]="newUser.email" placeholder="user@example.com"></div>
+      <div class="form-group"><label>Password</label><input type="password" [(ngModel)]="newUser.password"></div>
+      <div class="form-group"><label>Role</label>
+        <select [(ngModel)]="newUser.roleType">
+          <option value="INDIVIDUAL">Individual</option>
+          <option value="CORPORATE">Corporate</option>
+          <option value="ADMIN">Admin</option>
+        </select>
+      </div>
+      <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+        <button class="btn btn-primary" (click)="createUser()">Create</button>
+        <button class="btn btn-outline" (click)="showModal = false">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

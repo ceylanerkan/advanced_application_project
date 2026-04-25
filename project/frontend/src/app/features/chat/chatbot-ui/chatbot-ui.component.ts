@@ -21,7 +21,7 @@ interface ChatMessage {
   standalone: true,
   imports: [CommonModule, FormsModule, SafeHtmlPipe, PlotlyModule],
   templateUrl: './chatbot-ui.component.html',
-  styleUrls: ['./chatbot-ui.component.scss', '../../dashboards/admin-dashboard/admin-dashboard.component.scss']
+  styleUrls: ['./chatbot-ui.component.scss']
 })
 export class ChatbotUiComponent implements AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;

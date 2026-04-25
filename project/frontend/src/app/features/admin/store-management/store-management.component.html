@@ -1,0 +1,27 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>🏪 Store Management</h2>
+    <p>Approve, open, and close stores.</p>
+  </header>
+
+  <div class="glass-panel data-table-wrapper">
+    <table>
+      <thead><tr><th>ID</th><th>Store Name</th><th>Owner</th><th>Products</th><th>Revenue</th><th>Status</th><th>Actions</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let s of stores">
+          <td>{{ s.id }}</td>
+          <td><strong>{{ s.name }}</strong></td>
+          <td>{{ s.owner }}</td>
+          <td>{{ s.products }}</td>
+          <td>${{ s.revenue.toLocaleString() }}</td>
+          <td><span class="status-badge" [ngClass]="s.status.toLowerCase()">{{ s.status }}</span></td>
+          <td>
+            <button class="action-btn" [ngClass]="s.status === 'OPEN' ? 'danger' : 'success'" (click)="toggleStatus(s)">
+              {{ s.status === 'OPEN' ? '🔒 Close' : '🔓 Open' }}
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,60 +1,40 @@
-<div class="dashboard-container">
-  <aside class="sidebar glass-panel">
-    <h3>Admin Panel</h3>
-    <nav>
-      <ul>
-        <li><a class="active">Overview</a></li>
-        <li><a routerLink="/chat">AI Text2SQL Chat</a></li>
-      </ul>
-    </nav>
-    <div class="user-info">
-      <p>{{ userEmail }}</p>
-      <button class="btn btn-outline" (click)="logout()">Logout</button>
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>Platform Overview</h2>
+    <p>System-wide analytics and administration.</p>
+  </header>
+
+  <div class="kpi-grid grid grid-cols-4">
+    <div class="glass-panel kpi-card">
+      <h4>Total Users</h4>
+      <h2>12,450</h2>
+      <span class="text-success">+12% this month</span>
     </div>
-  </aside>
-
-  <main class="content">
-    <header class="header">
-      <h2>System Overview</h2>
-      <p>Global statistics and revenue tracking.</p>
-    </header>
-
-    <div class="kpi-grid grid grid-cols-3">
-      <div class="glass-panel kpi-card">
-        <h4>Total Users</h4>
-        <h2>12,450</h2>
-        <span class="text-success">+12% this month</span>
-      </div>
-      <div class="glass-panel kpi-card">
-        <h4>Total Revenue</h4>
-        <h2>$1.2M</h2>
-        <span class="text-success">+5% this month</span>
-      </div>
-      <div class="glass-panel kpi-card">
-        <h4>Active Stores</h4>
-        <h2>342</h2>
-        <span class="text-warning">-2% this month</span>
-      </div>
+    <div class="glass-panel kpi-card">
+      <h4>Total Revenue</h4>
+      <h2>$1.2M</h2>
+      <span class="text-success">+5% this month</span>
     </div>
-
-    <div class="charts-grid grid grid-cols-2">
-      <div class="glass-panel chart-container animate-fade-in">
-        <h4>Revenue Over Time</h4>
-        <canvas baseChart
-          [type]="'line'"
-          [data]="lineChartData"
-          [options]="chartOptions">
-        </canvas>
-      </div>
-
-      <div class="glass-panel chart-container animate-fade-in">
-        <h4>User Demographics</h4>
-        <canvas baseChart
-          [type]="'doughnut'"
-          [data]="doughnutChartData"
-          [options]="doughnutOptions">
-        </canvas>
-      </div>
+    <div class="glass-panel kpi-card">
+      <h4>Active Stores</h4>
+      <h2>342</h2>
+      <span class="text-warning">-2% this month</span>
     </div>
-  </main>
+    <div class="glass-panel kpi-card">
+      <h4>Total Orders</h4>
+      <h2>28,903</h2>
+      <span class="text-success">+8% this month</span>
+    </div>
+  </div>
+
+  <div class="charts-grid grid grid-cols-2">
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Revenue Over Time</h4>
+      <canvas baseChart [type]="'line'" [data]="lineChartData" [options]="chartOptions"></canvas>
+    </div>
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>User Demographics</h4>
+      <canvas baseChart [type]="'doughnut'" [data]="doughnutChartData" [options]="doughnutOptions"></canvas>
+    </div>
+  </div>
 </div>
