@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.model.Review;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.ReviewRepository;
@@ -31,15 +32,9 @@ public class ReviewService {
 
     public Review createReview(Review review, String email) {
         User currentUser = userRepository.findByEmail(email).orElseThrow();
-
+        
         // Mitigate AV-11: Force review ownership to logged in user
         review.setUser(currentUser);
-
-        // Mitigate AV-04: Stored XSS Prevention by stripping HTML tags from comment
-        if (review.getComment() != null) {
-            String sanitizedComment = review.getComment().replaceAll("<.*?>", ""); // Strips <script>, <img>, etc.
-            review.setComment(sanitizedComment);
-        }
 
         return reviewRepository.save(review);
     }
@@ -48,17 +43,15 @@ public class ReviewService {
         Review review = getReviewById(id);
         User currentUser = userRepository.findByEmail(email).orElseThrow();
 
-        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())
-                && !review.getUser().getId().equals(currentUser.getId())) {
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType()) && !review.getUser().getId().equals(currentUser.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only edit your own reviews");
         }
 
-        // Apply XSS filter
-        if (reviewDetails.getComment() != null) {
-            review.setComment(reviewDetails.getComment().replaceAll("<.*?>", ""));
-        }
-
         review.setStarRating(reviewDetails.getStarRating());
+        review.setSentiment(reviewDetails.getSentiment());
+        review.setProduct(reviewDetails.getProduct());
+        review.setCreatedAt(reviewDetails.getCreatedAt());
+        
         return reviewRepository.save(review);
     }
 
@@ -66,8 +59,7 @@ public class ReviewService {
         Review review = getReviewById(id);
         User currentUser = userRepository.findByEmail(email).orElseThrow();
 
-        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())
-                && !review.getUser().getId().equals(currentUser.getId())) {
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType()) && !review.getUser().getId().equals(currentUser.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own reviews");
         }
         reviewRepository.delete(review);

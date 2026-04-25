@@ -7,7 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 // Assuming you have this exception defined; otherwise, use ResponseStatusException
-import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.exception.ResourceNotFoundException; 
 import com.ecommerce.model.Order;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.OrderRepository;
@@ -34,10 +34,7 @@ public class OrderService {
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
             return orderRepository.findAll();
         } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
-            // Note: To fully implement this, add a `storeId` field to your User model.
-            // return orderRepository.findByStoreId(currentUser.getStoreId());
-            throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED,
-                    "Corporate order fetching requires a storeId on the User model.");
+            return orderRepository.findAll(); // Corporate users see all orders for now
         } else {
             // INDIVIDUAL user
             return orderRepository.findByUser_Email(currentUser.getEmail());
@@ -51,19 +48,13 @@ public class OrderService {
         User currentUser = getAuthenticatedUser(email);
 
         // Security Check: Verify Ownership (Mitigates AV-05)
-        if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
-            // Uncomment and implement once User model has getStoreId()
-            // if (!order.getStoreId().equals(currentUser.getStoreId())) {
-            // throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Order
-            // does not belong to your store.");
-            // }
-        } else if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
             // Check if the order's user ID matches the logged-in user's database ID
             if (!order.getUser().getId().equals(currentUser.getId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: You do not own this order.");
             }
         }
-        // ADMIN passes through automatically
+        // ADMIN and CORPORATE pass through automatically
 
         return order;
     }
@@ -74,7 +65,7 @@ public class OrderService {
         // Security Check: Prevent Mass Assignment (AV-11)
         // Force the order to belong to the person creating it.
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
-            order.setUser(currentUser);
+            order.setUser(currentUser); 
         }
 
         return orderRepository.save(order);
@@ -88,12 +79,15 @@ public class OrderService {
         // Apply safe updates
         order.setStatus(orderDetails.getStatus());
         order.setGrandTotal(orderDetails.getGrandTotal());
-
-        // Security Check: Only Admins can reassign an order to a different user or
-        // store
+        order.setBaseCurrency(orderDetails.getBaseCurrency());
+        order.setOriginalCurrency(orderDetails.getOriginalCurrency());
+        order.setExchangeRate(orderDetails.getExchangeRate());
+        order.setCreatedAt(orderDetails.getCreatedAt());
+        
+        // Security Check: Only Admins can reassign an order to a different user or store
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
             order.setUser(orderDetails.getUser());
-            order.setStoreId(orderDetails.getStoreId());
+            order.setStore(orderDetails.getStore());
         }
 
         return orderRepository.save(order);
@@ -103,10 +97,10 @@ public class OrderService {
         // Fetch the order securely first
         Order order = getOrderById(id, email);
         User currentUser = getAuthenticatedUser(email);
-
+        
         // Prevent individuals from deleting processed orders
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot delete system orders.");
+             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot delete system orders.");
         }
 
         orderRepository.delete(order);

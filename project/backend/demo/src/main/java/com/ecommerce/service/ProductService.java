@@ -35,32 +35,28 @@ public class ProductService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                    "Individual users cannot modify the product catalog.");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individual users cannot modify the product catalog.");
         }
     }
 
     public Product createProduct(Product product, String email) {
         verifyWriteAccess(email);
-
-        // NOTE FOR YOUR PROJECT: To fully satisfy AV-05 (BOLA) for Corporate users,
-        // your Product model needs a `storeId` field so you can lock Corporate users to
-        // only creating/editing
-        // products for their specific store. Once added, you would inject it here:
-        // if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
-        // product.setStoreId(currentUser.getStoreId()); }
-
         return productRepository.save(product);
     }
 
     public Product updateProduct(Long id, Product productDetails, String email) {
         verifyWriteAccess(email);
         Product product = getProductById(id);
-
-        product.setProductId(productDetails.getProductId());
-        product.setName(productDetails.getName());
+        
+        product.setStore(productDetails.getStore());
         product.setCategory(productDetails.getCategory());
-
+        product.setSku(productDetails.getSku());
+        product.setName(productDetails.getName());
+        product.setUnitPrice(productDetails.getUnitPrice());
+        product.setBaseCurrency(productDetails.getBaseCurrency());
+        product.setOriginalCurrency(productDetails.getOriginalCurrency());
+        product.setExchangeRate(productDetails.getExchangeRate());
+        
         return productRepository.save(product);
     }
 
