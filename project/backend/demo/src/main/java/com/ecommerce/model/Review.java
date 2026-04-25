@@ -27,6 +27,9 @@ public class Review {
 
     private String sentiment;
 
+    @Column(columnDefinition = "TEXT")
+    private String comment;
+
     @Column(name = "created_at")
     private String createdAt; // ISO 8601 String
 }

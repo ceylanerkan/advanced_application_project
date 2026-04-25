@@ -35,6 +35,12 @@ public class ShipmentController {
         return ResponseEntity.ok(shipmentService.getShipmentByIdSecurely(id, authentication.getName()));
     }
 
+    @Operation(summary = "Get shipment by order ID", description = "Fetch shipment tracking details for a specific order.")
+    @GetMapping("/order/{orderId}")
+    public ResponseEntity<Shipment> getShipmentByOrderId(@PathVariable Long orderId, Authentication authentication) {
+        return ResponseEntity.ok(shipmentService.getShipmentByOrderId(orderId, authentication.getName()));
+    }
+
     @Operation(summary = "Create a new shipment (Admin/Corporate)")
     @PostMapping
     public ResponseEntity<Shipment> createShipment(@Valid @RequestBody Shipment shipment, Authentication authentication) {

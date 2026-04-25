@@ -31,6 +31,20 @@ public class ShipmentService {
         throw new ResponseStatusException(HttpStatus.NOT_IMPLEMENTED, "Need custom query method to fetch user specific shipments");
     }
 
+    public Shipment getShipmentByOrderId(Long orderId, String email) {
+        Shipment shipment = shipmentRepository.findByOrderId(orderId)
+                .orElseThrow(() -> new ResourceNotFoundException("Shipment not found for order id: " + orderId));
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
+
+        // Mitigate AV-05: Ensure shipment's order belongs to user
+        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
+            if (!shipment.getOrder().getUser().getId().equals(currentUser.getId())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Access denied: Shipment does not belong to you");
+            }
+        }
+        return shipment;
+    }
+
     public Shipment getShipmentByIdSecurely(Long id, String email) {
         Shipment shipment = shipmentRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Shipment not found with id: " + id));
