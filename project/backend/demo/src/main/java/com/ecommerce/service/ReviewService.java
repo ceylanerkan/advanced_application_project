@@ -49,6 +49,7 @@ public class ReviewService {
 
         review.setStarRating(reviewDetails.getStarRating());
         review.setSentiment(reviewDetails.getSentiment());
+        review.setComment(reviewDetails.getComment());
         review.setProduct(reviewDetails.getProduct());
         review.setCreatedAt(reviewDetails.getCreatedAt());
         
