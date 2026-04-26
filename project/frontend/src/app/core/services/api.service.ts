@@ -122,6 +122,10 @@ export class ApiService {
     return this.http.get<any>(`${this.base}/shipments/${id}`);
   }
 
+  getShipmentByOrder(orderId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/shipments/order/${orderId}`);
+  }
+
   // ── AI Chat ──
   askAI(question: string, sessionId: string): Observable<any> {
     return this.http.post(`${this.base}/ai-chat/ask`, { question, sessionId });

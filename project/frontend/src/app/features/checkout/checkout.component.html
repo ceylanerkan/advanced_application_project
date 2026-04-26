@@ -1,10 +1,10 @@
 <div class="page-content animate-fade-in">
   <!-- Order Success -->
-  <div *ngIf="orderPlaced" class="glass-panel" style="text-align:center; padding: 3rem; max-width: 600px; margin: 3rem auto;">
-    <h3 style="font-size: 4rem; margin-bottom: 1rem;">✅</h3>
-    <h2>Order Placed Successfully!</h2>
-    <p>Thank you for your purchase. You will receive a confirmation email shortly.</p>
-    <div style="display:flex; gap:1rem; justify-content:center; margin-top: 1.5rem;">
+  <div *ngIf="orderPlaced" class="glass-panel" style="text-align:center; padding: 3rem; max-width: 550px; margin: 3rem auto;">
+    <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+    <h2 style="margin-bottom: 0.5rem;">Order Placed Successfully</h2>
+    <p style="color: var(--text-secondary);">Thank you for your purchase. You will receive a confirmation email shortly.</p>
+    <div style="display:flex; gap:0.75rem; justify-content:center; margin-top: 1.5rem;">
       <button class="btn btn-outline" (click)="goHome()">Continue Shopping</button>
       <button class="btn btn-primary" (click)="goToOrders()">View Orders</button>
     </div>
@@ -17,64 +17,114 @@
       <p>Review your order and complete the payment.</p>
     </header>
 
-    <div class="grid grid-cols-2" style="gap: 2rem;">
-      <!-- Left: Payment -->
+    <div class="grid grid-cols-2" style="gap: 1.5rem; align-items: start;">
+      <!-- Left Column -->
       <div>
+        <!-- Shipping Address -->
+        <div class="glass-panel" style="margin-bottom: 1rem;">
+          <h4 style="margin-bottom: 1rem;">Shipping Address</h4>
+          <div class="form-group">
+            <label>Full Name</label>
+            <input type="text" [(ngModel)]="fullName" placeholder="John Doe">
+            <small *ngIf="errors['fullName']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['fullName'] }}</small>
+          </div>
+          <div class="form-group">
+            <label>Address</label>
+            <input type="text" [(ngModel)]="address" placeholder="123 Main Street, Apt 4">
+            <small *ngIf="errors['address']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['address'] }}</small>
+          </div>
+          <div style="display:flex; gap: 0.75rem;">
+            <div class="form-group" style="flex:1">
+              <label>City</label>
+              <input type="text" [(ngModel)]="city" placeholder="Istanbul">
+              <small *ngIf="errors['city']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['city'] }}</small>
+            </div>
+            <div class="form-group" style="flex:1">
+              <label>Postal Code</label>
+              <input type="text" [(ngModel)]="postalCode" placeholder="34000">
+              <small *ngIf="errors['postalCode']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['postalCode'] }}</small>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Phone</label>
+            <input type="tel" [(ngModel)]="phone" placeholder="+90 555 123 4567">
+            <small *ngIf="errors['phone']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['phone'] }}</small>
+          </div>
+        </div>
+
+        <!-- Payment Method -->
         <div class="glass-panel" style="margin-bottom: 1rem;">
           <h4 style="margin-bottom: 1rem;">Payment Method</h4>
           <div class="form-group">
-            <label>
-              <input type="radio" name="payment" value="credit_card" [(ngModel)]="paymentMethod"> 💳 Credit / Debit Card
+            <label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+              <input type="radio" name="payment" value="credit_card" [(ngModel)]="paymentMethod" style="width:auto;"> 💳 Credit / Debit Card
             </label>
           </div>
           <div class="form-group">
-            <label>
-              <input type="radio" name="payment" value="paypal" [(ngModel)]="paymentMethod"> 🅿️ PayPal
+            <label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+              <input type="radio" name="payment" value="paypal" [(ngModel)]="paymentMethod" style="width:auto;"> 🅿️ PayPal
             </label>
           </div>
           <div class="form-group">
-            <label>
-              <input type="radio" name="payment" value="bank" [(ngModel)]="paymentMethod"> 🏦 Bank Transfer
+            <label style="cursor:pointer; display:flex; align-items:center; gap:0.5rem;">
+              <input type="radio" name="payment" value="bank" [(ngModel)]="paymentMethod" style="width:auto;"> 🏦 Bank Transfer
             </label>
           </div>
         </div>
 
+        <!-- Card Details -->
         <div class="glass-panel" *ngIf="paymentMethod === 'credit_card'">
           <h4 style="margin-bottom: 1rem;">Card Details</h4>
           <div class="form-group">
             <label>Card Number</label>
-            <input type="text" placeholder="1234 5678 9012 3456" maxlength="19">
+            <input type="text" [(ngModel)]="cardNumber" placeholder="1234 5678 9012 3456" maxlength="19">
+            <small *ngIf="errors['cardNumber']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['cardNumber'] }}</small>
           </div>
-          <div style="display:flex; gap: 1rem;">
+          <div style="display:flex; gap: 0.75rem;">
             <div class="form-group" style="flex:1">
               <label>Expiry</label>
-              <input type="text" placeholder="MM/YY">
+              <input type="text" [(ngModel)]="cardExpiry" placeholder="MM/YY" maxlength="5">
+              <small *ngIf="errors['cardExpiry']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['cardExpiry'] }}</small>
             </div>
             <div class="form-group" style="flex:1">
               <label>CVV</label>
-              <input type="text" placeholder="123" maxlength="3">
+              <input type="password" [(ngModel)]="cardCvv" placeholder="•••" maxlength="4">
+              <small *ngIf="errors['cardCvv']" style="color: var(--danger); font-size: 0.75rem;">{{ errors['cardCvv'] }}</small>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Right: Summary -->
-      <div class="glass-panel">
+      <!-- Right Column: Order Summary -->
+      <div class="glass-panel" style="position: sticky; top: 2rem;">
         <h4 style="margin-bottom: 1rem;">Order Summary</h4>
-        <div *ngFor="let item of cartItems" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--glass-border);">
-          <span>{{ item.name }} × {{ item.quantity }}</span>
-          <span>${{ (item.unitPrice * item.quantity).toFixed(2) }}</span>
+
+        <div *ngFor="let item of cartItems" style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.9rem;">
+          <span style="color: var(--text-primary);">{{ item.name }} <span style="color: var(--text-muted);">× {{ item.quantity }}</span></span>
+          <span style="color: var(--text-primary); font-weight: 500;">${{ (item.unitPrice * item.quantity).toFixed(2) }}</span>
         </div>
-        <div style="padding: 0.5rem 0; display:flex; justify-content:space-between; color: var(--text-secondary); font-size:0.9rem;">
+
+        <div style="padding: 0.5rem 0; display:flex; justify-content:space-between; color: var(--text-secondary); font-size: 0.85rem;">
           <span>Subtotal</span><span>${{ subtotal.toFixed(2) }}</span>
         </div>
-        <div style="padding: 0.5rem 0; display:flex; justify-content:space-between; color: var(--text-secondary); font-size:0.9rem;">
+        <div style="padding: 0.25rem 0; display:flex; justify-content:space-between; color: var(--text-secondary); font-size: 0.85rem;">
           <span>Tax (8%)</span><span>${{ tax.toFixed(2) }}</span>
         </div>
-        <div style="padding: 0.75rem 0; display:flex; justify-content:space-between; font-size:1.25rem; font-weight:700; border-top: 1px solid var(--glass-border); margin-top:0.5rem;">
+        <div style="padding: 0.75rem 0; display:flex; justify-content:space-between; font-size: 1.15rem; font-weight: 700; border-top: 1px solid var(--border); margin-top: 0.5rem;">
           <span>Total</span><span>${{ total.toFixed(2) }}</span>
         </div>
-        <button class="btn btn-primary" style="width:100%; margin-top:1rem;" (click)="placeOrder()">Place Order →</button>
+
+        <button
+          class="btn btn-primary"
+          style="width:100%; margin-top: 1rem; padding: 0.75rem;"
+          (click)="placeOrder()"
+          [disabled]="isProcessing">
+          {{ isProcessing ? 'Processing...' : 'Place Order →' }}
+        </button>
+
+        <p *ngIf="Object.keys(errors).length > 0" style="color: var(--danger); font-size: 0.8rem; margin-top: 0.75rem; text-align: center;">
+          Please fill in all required fields.
+        </p>
       </div>
     </div>
   </div>

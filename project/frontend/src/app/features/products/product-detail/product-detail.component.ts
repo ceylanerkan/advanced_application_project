@@ -37,12 +37,13 @@ export class ProductDetailComponent implements OnInit {
       }
     });
 
-    // We can fetch actual reviews here if the endpoint gets added, for now mock:
-    this.reviews = [
-      { user: 'John D.', rating: 5, comment: 'Excellent quality!', date: '2026-03-15' },
-      { user: 'Sarah M.', rating: 4, comment: 'Good value for money.', date: '2026-03-10' },
-      { user: 'Alex K.', rating: 4, comment: 'Very satisfied with purchase.', date: '2026-02-28' }
-    ];
+    this.apiService.getReviews().subscribe({
+      next: (allReviews) => {
+        // Filter reviews for this product
+        this.reviews = allReviews.filter((r: any) => r.product?.id === id);
+      },
+      error: (err) => console.error('Failed to load reviews', err)
+    });
   }
 
   getStars(rating: number | string): string {
@@ -65,20 +66,15 @@ export class ProductDetailComponent implements OnInit {
 
   submitReview() {
     if (!this.newComment.trim() || !this.product) return;
-    // Real implementation would post to ApiService.createReview()
+    
     this.apiService.createReview({
       product: { id: this.product.id },
       starRating: this.newRating,
-      sentiment: 'NEUTRAL',
-      // The user details will be handled by backend token
+      comment: this.newComment,
+      sentiment: 'NEUTRAL'
     }).subscribe({
-      next: () => {
-        this.reviews.unshift({
-          user: 'You',
-          rating: this.newRating,
-          comment: this.newComment,
-          date: new Date().toISOString().split('T')[0]
-        });
+      next: (savedReview) => {
+        this.reviews.unshift(savedReview);
         this.newComment = '';
         this.newRating = 5;
         alert('Review submitted!');

@@ -48,8 +48,9 @@ interface NavItem {
     .sidebar {
       width: 260px;
       min-height: 100vh;
+      background: var(--bg-secondary);
       border-radius: 0;
-      border-right: 1px solid var(--glass-border);
+      border-right: 1px solid var(--border);
       border-top: none; border-bottom: none; border-left: none;
       display: flex;
       flex-direction: column;
@@ -73,19 +74,20 @@ interface NavItem {
     .brand-icon { font-size: 1.5rem; }
 
     .sidebar-brand h3 {
-      color: var(--accent-primary);
-      font-size: 1.25rem;
+      color: var(--text-primary);
+      font-size: 1.1rem;
       margin: 0;
+      font-weight: 600;
     }
 
     .nav-section { margin-bottom: var(--spacing-lg); }
 
     .nav-section-label {
       display: block;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      color: var(--text-secondary);
+      color: var(--text-muted);
       padding: 0 var(--spacing-sm);
       margin-bottom: var(--spacing-sm);
       font-weight: 600;
@@ -97,17 +99,17 @@ interface NavItem {
       display: flex;
       align-items: center;
       gap: var(--spacing-sm);
-      padding: 0.55rem var(--spacing-sm);
+      padding: 0.5rem var(--spacing-sm);
       color: var(--text-secondary);
       text-decoration: none;
       border-radius: var(--radius-sm);
-      transition: all 0.2s;
+      transition: background-color 0.12s, color 0.12s;
       cursor: pointer;
-      font-size: 0.9rem;
+      font-size: 0.85rem;
     }
 
     a:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: var(--surface-hover);
       color: var(--text-primary);
     }
 
@@ -120,7 +122,7 @@ interface NavItem {
 
     .user-info {
       margin-top: auto;
-      border-top: 1px solid var(--glass-border);
+      border-top: 1px solid var(--border);
       padding-top: var(--spacing-md);
     }
 
@@ -130,11 +132,11 @@ interface NavItem {
 
     .role-badge {
       display: inline-block;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.05em;
-      background: rgba(59, 130, 246, 0.2);
+      background: rgba(10, 132, 255, 0.15);
       color: var(--accent-primary);
       padding: 0.15rem 0.5rem;
       border-radius: var(--radius-sm);
@@ -142,14 +144,14 @@ interface NavItem {
     }
 
     .user-info p {
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       margin: 0.25rem 0 0 0;
-      color: var(--text-secondary);
+      color: var(--text-muted);
     }
 
     .user-info .btn {
       width: 100%;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       padding: 0.4rem;
       margin-top: var(--spacing-sm);
     }
@@ -229,8 +231,7 @@ export class SidebarComponent implements OnInit {
       ]},
       { label: 'My Account', items: [
         { label: 'Dashboard', icon: '📊', route: '/individual' },
-        { label: 'Order History', icon: '📋', route: '/orders' },
-        { label: 'Track Shipments', icon: '🚚', route: '/tracking' }
+        { label: 'Order History', icon: '📋', route: '/orders' }
       ]},
       { label: 'AI', items: common }
     ];

@@ -25,10 +25,10 @@ public class Review {
     @Column(name = "star_rating")
     private Integer starRating;
 
-    private String sentiment;
-
     @Column(columnDefinition = "TEXT")
     private String comment;
+
+    private String sentiment;
 
     @Column(name = "created_at")
     private String createdAt; // ISO 8601 String

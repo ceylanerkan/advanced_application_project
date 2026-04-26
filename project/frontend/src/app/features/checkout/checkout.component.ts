@@ -18,6 +18,23 @@ export class CheckoutComponent implements OnInit {
   cartItems: any[] = [];
   paymentMethod = 'credit_card';
   orderPlaced = false;
+  isProcessing = false;
+
+  // Shipping address
+  fullName = '';
+  address = '';
+  city = '';
+  postalCode = '';
+  phone = '';
+
+  // Card details
+  cardNumber = '';
+  cardExpiry = '';
+  cardCvv = '';
+
+  // Validation
+  errors: { [key: string]: string } = {};
+  Object = Object;
 
   constructor(private router: Router, private apiService: ApiService, private authService: AuthService) { }
 
@@ -35,10 +52,38 @@ export class CheckoutComponent implements OnInit {
   get tax(): number { return this.subtotal * 0.08; }
   get total(): number { return this.subtotal + this.tax; }
 
+  validate(): boolean {
+    this.errors = {};
+
+    if (!this.fullName.trim()) this.errors['fullName'] = 'Full name is required.';
+    if (!this.address.trim()) this.errors['address'] = 'Address is required.';
+    if (!this.city.trim()) this.errors['city'] = 'City is required.';
+    if (!this.postalCode.trim()) this.errors['postalCode'] = 'Postal code is required.';
+    if (!this.phone.trim()) this.errors['phone'] = 'Phone number is required.';
+
+    if (this.paymentMethod === 'credit_card') {
+      if (!this.cardNumber.trim() || this.cardNumber.replace(/\s/g, '').length < 16) {
+        this.errors['cardNumber'] = 'Enter a valid 16-digit card number.';
+      }
+      if (!this.cardExpiry.trim() || !/^\d{2}\/\d{2}$/.test(this.cardExpiry)) {
+        this.errors['cardExpiry'] = 'Enter expiry as MM/YY.';
+      }
+      if (!this.cardCvv.trim() || this.cardCvv.length < 3) {
+        this.errors['cardCvv'] = 'Enter a valid CVV.';
+      }
+    }
+
+    return Object.keys(this.errors).length === 0;
+  }
+
   placeOrder() {
+    if (!this.validate()) return;
+
+    this.isProcessing = true;
+
     const storeMap = new Map<number, any[]>();
     this.cartItems.forEach(item => {
-      const storeId = item.store?.id || 1; // Default to 1 if no store
+      const storeId = item.store?.id || 1;
       if (!storeMap.has(storeId)) {
         storeMap.set(storeId, []);
       }
@@ -48,6 +93,7 @@ export class CheckoutComponent implements OnInit {
     const user = this.authService.currentUserValue;
     if (!user) {
       alert('You must be logged in to place an order.');
+      this.isProcessing = false;
       return;
     }
 
@@ -61,7 +107,12 @@ export class CheckoutComponent implements OnInit {
         user: { id: user.id },
         status: 'PENDING',
         grandTotal: grandTotal,
-        baseCurrency: 'USD'
+        baseCurrency: 'USD',
+        shippingFullName: this.fullName,
+        shippingAddress: this.address,
+        shippingCity: this.city,
+        shippingPostalCode: this.postalCode,
+        shippingPhone: this.phone
       };
 
       return this.apiService.createOrder(orderPayload).pipe(
@@ -78,16 +129,21 @@ export class CheckoutComponent implements OnInit {
       );
     });
 
-    if (orderObservables.length === 0) return;
+    if (orderObservables.length === 0) {
+      this.isProcessing = false;
+      return;
+    }
 
     forkJoin(orderObservables).subscribe({
       next: () => {
         this.orderPlaced = true;
+        this.isProcessing = false;
         localStorage.removeItem('cart');
       },
       error: (err) => {
         console.error('Order creation failed', err);
-        alert('There was an issue processing your order.');
+        this.isProcessing = false;
+        alert('There was an issue processing your order. Please try again.');
       }
     });
   }

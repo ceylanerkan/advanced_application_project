@@ -63,10 +63,10 @@
     <!-- Reviews List -->
     <div class="glass-panel" *ngFor="let r of reviews" style="margin-bottom: 0.75rem; padding: 1rem;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <strong>{{ r.user }}</strong>
-        <small style="color: var(--text-secondary)">{{ r.date }}</small>
+        <strong>{{ r.user?.email || r.user || 'Anonymous' }}</strong>
+        <small style="color: var(--text-secondary)">{{ (r.createdAt?.split('T')[0]) || r.date }}</small>
       </div>
-      <div class="stars">{{ getStars(r.rating) }}</div>
+      <div class="stars">{{ getStars(r.starRating || r.rating) }}</div>
       <p style="margin: 0.5rem 0 0 0;">{{ r.comment }}</p>
     </div>
   </div>

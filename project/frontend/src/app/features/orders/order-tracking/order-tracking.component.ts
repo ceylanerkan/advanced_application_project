@@ -35,14 +35,21 @@ export class OrderTrackingComponent implements OnInit {
       error: (err) => console.error('Failed to load order', err)
     });
 
-    // We can fetch actual shipment details if the shipment endpoint links to orderId
-    // For now, mock the shipment details specific to this order to prevent errors
-    this.shipment = {
-      warehouse: 'Main Facility',
-      mode: 'Standard Shipping',
-      carrier: 'FedEx',
-      trackingNumber: 'FDX-' + this.orderId + '-2026'
-    };
+    this.apiService.getShipmentByOrder(this.orderId).subscribe({
+      next: (shipmentData) => {
+        this.shipment = shipmentData;
+      },
+      error: (err) => {
+        console.error('Failed to load shipment details or no shipment exists yet', err);
+        // Fallback for visual testing if no real shipment
+        this.shipment = {
+          warehouse: 'Processing Facility',
+          mode: 'Pending',
+          carrier: 'TBD',
+          trackingNumber: 'PENDING'
+        };
+      }
+    });
   }
 
   updateTimeline(status: string) {

@@ -16,7 +16,7 @@ export class LoginComponent {
   isRegisterMode = false;
   email = '';
   password = '';
-  role: 'ADMIN' | 'CORPORATE' | 'INDIVIDUAL' = 'INDIVIDUAL';
+  role: 'CORPORATE' | 'INDIVIDUAL' = 'INDIVIDUAL';
   errorMessage = '';
   successMessage = '';
 

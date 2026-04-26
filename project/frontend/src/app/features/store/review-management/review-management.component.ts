@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-review-management',
@@ -13,16 +14,13 @@ export class ReviewManagementComponent implements OnInit {
   reviews: any[] = [];
   replyText: { [key: number]: string } = {};
 
+  constructor(private apiService: ApiService) {}
+
   ngOnInit() {
-    this.reviews = Array.from({ length: 10 }, (_, i) => ({
-      id: i + 1,
-      user: `user${i + 1}@example.com`,
-      product: `Product ${i + 1}`,
-      starRating: Math.floor(Math.random() * 3) + 3,
-      sentiment: ['POSITIVE', 'NEUTRAL', 'NEGATIVE'][i % 3],
-      createdAt: `2026-04-${String(10 + i).padStart(2, '0')}`,
-      reply: i < 3 ? 'Thank you for your feedback!' : null
-    }));
+    this.apiService.getReviews().subscribe({
+      next: (data) => this.reviews = data,
+      error: (err) => console.error('Failed to load reviews', err)
+    });
   }
 
   getStars(n: number): string {
