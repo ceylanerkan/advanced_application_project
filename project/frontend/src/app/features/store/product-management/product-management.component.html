@@ -1,0 +1,52 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
+      <div>
+        <h2>📦 Product Management</h2>
+        <p>Manage your store's product catalog.</p>
+      </div>
+      <button class="btn btn-primary" (click)="openCreate()">+ Add Product</button>
+    </div>
+  </header>
+
+  <div class="glass-panel data-table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>SKU</th><th>Category</th><th>Price</th><th>Stock</th><th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let p of products">
+          <td>{{ p.id }}</td>
+          <td><strong>{{ p.name }}</strong></td>
+          <td>{{ p.sku }}</td>
+          <td>{{ p.category }}</td>
+          <td>${{ p.unitPrice.toFixed(2) }}</td>
+          <td>
+            <span [ngClass]="{'text-danger': p.stock < 20, 'text-warning': p.stock >= 20 && p.stock < 50}">{{ p.stock }}</span>
+          </td>
+          <td>
+            <button class="action-btn" (click)="openEdit(p)">✏️</button>
+            <button class="action-btn danger" (click)="deleteProduct(p.id)">🗑️</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-overlay" *ngIf="showModal" (click)="closeModal()">
+    <div class="glass-panel modal-content" (click)="$event.stopPropagation()">
+      <h3>{{ editMode ? 'Edit Product' : 'Add New Product' }}</h3>
+      <div class="form-group"><label>Name</label><input [(ngModel)]="currentProduct.name" placeholder="Product name"></div>
+      <div class="form-group"><label>SKU</label><input [(ngModel)]="currentProduct.sku" placeholder="SKU-0001"></div>
+      <div class="form-group"><label>Category</label><input [(ngModel)]="currentProduct.category" placeholder="Electronics"></div>
+      <div class="form-group"><label>Price ($)</label><input type="number" [(ngModel)]="currentProduct.unitPrice"></div>
+      <div style="display:flex; gap: 0.5rem; margin-top: 1rem;">
+        <button class="btn btn-primary" (click)="save()">{{ editMode ? 'Update' : 'Create' }}</button>
+        <button class="btn btn-outline" (click)="closeModal()">Cancel</button>
+      </div>
+    </div>
+  </div>
+</div>

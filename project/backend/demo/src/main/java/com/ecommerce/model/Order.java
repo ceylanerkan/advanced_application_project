@@ -36,6 +36,21 @@ public class Order {
     @Column(name = "exchange_rate")
     private Double exchangeRate;
 
+    @Column(name = "shipping_full_name")
+    private String shippingFullName;
+
+    @Column(name = "shipping_address")
+    private String shippingAddress;
+
+    @Column(name = "shipping_city")
+    private String shippingCity;
+
+    @Column(name = "shipping_postal_code")
+    private String shippingPostalCode;
+
+    @Column(name = "shipping_phone")
+    private String shippingPhone;
+
     @Column(name = "created_at")
     private String createdAt; // ISO 8601 String
 }

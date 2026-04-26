@@ -1,0 +1,63 @@
+<div class="page-content animate-fade-in">
+  <button class="btn btn-outline" (click)="goBack()" style="margin-bottom: 1.5rem;">← Back to Orders</button>
+
+  <header class="page-header">
+    <h2>🚚 Order Tracking — #{{ orderId }}</h2>
+    <p>Real-time tracking information for your shipment.</p>
+  </header>
+
+  <div class="grid grid-cols-2" style="gap: 2rem;" *ngIf="order">
+    <!-- Timeline -->
+    <div class="glass-panel">
+      <h4 style="margin-bottom: 1.5rem;">Shipment Progress</h4>
+      <div class="timeline">
+        <div class="timeline-item" *ngFor="let step of trackingSteps" [ngClass]="step.status">
+          <h4 style="margin: 0; font-size: 0.95rem;">{{ step.label }}</h4>
+          <p style="font-size: 0.8rem; margin: 0.25rem 0 0 0;" *ngIf="step.date">{{ step.date }}</p>
+          <p style="font-size: 0.8rem; margin: 0.25rem 0 0 0; color: var(--text-secondary);">{{ step.desc }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Shipment Info -->
+    <div>
+      <div class="glass-panel" style="margin-bottom: 1rem;">
+        <h4 style="margin-bottom: 1rem;">Shipment Details</h4>
+        <div style="display: grid; gap: 0.75rem;">
+          <div>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">Carrier</span>
+            <p style="margin:0; font-weight: 600;">{{ shipment.carrier }}</p>
+          </div>
+          <div>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">Tracking Number</span>
+            <p style="margin:0; font-weight: 600; color: var(--accent-primary);">{{ shipment.trackingNumber }}</p>
+          </div>
+          <div>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">Warehouse</span>
+            <p style="margin:0;">{{ shipment.warehouse }}</p>
+          </div>
+          <div>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">Shipping Mode</span>
+            <p style="margin:0;">{{ shipment.mode }}</p>
+          </div>
+          <div>
+            <span style="color: var(--text-secondary); font-size: 0.8rem;">Current Status</span>
+            <span class="status-badge in-transit">{{ shipment.status }}</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="glass-panel">
+        <h4 style="margin-bottom: 1rem;">Order Info</h4>
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: var(--text-secondary);">Order Date</span>
+          <span>{{ order.createdAt }}</span>
+        </div>
+        <div style="display: flex; justify-content: space-between;">
+          <span style="color: var(--text-secondary);">Grand Total</span>
+          <span style="font-weight: 700; font-size: 1.25rem;">${{ order.grandTotal }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

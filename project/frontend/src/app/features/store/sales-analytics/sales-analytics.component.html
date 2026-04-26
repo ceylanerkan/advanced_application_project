@@ -1,0 +1,25 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>📈 Sales Analytics</h2>
+    <p>Revenue and order metrics with customizable date ranges.</p>
+  </header>
+
+  <div class="toolbar glass-panel">
+    <label style="color: var(--text-secondary); font-size: 0.85rem;">From</label>
+    <input type="date" [value]="dateFrom" style="max-width: 180px;">
+    <label style="color: var(--text-secondary); font-size: 0.85rem;">To</label>
+    <input type="date" [value]="dateTo" style="max-width: 180px;">
+    <button class="btn btn-primary">Apply</button>
+  </div>
+
+  <div class="charts-grid grid grid-cols-2">
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Revenue & Orders by Month</h4>
+      <canvas baseChart [type]="'bar'" [data]="salesData" [options]="chartOptions"></canvas>
+    </div>
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Order Trend (Weekly)</h4>
+      <canvas baseChart [type]="'line'" [data]="orderTrendData" [options]="chartOptions"></canvas>
+    </div>
+  </div>
+</div>

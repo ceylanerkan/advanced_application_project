@@ -1,8 +1,8 @@
 <div class="login-container">
   <div class="glass-panel login-card animate-fade-in">
     <div class="header">
-      <h2>Welcome Back</h2>
-      <p>Log in to your Analytics Dashboard</p>
+      <h2>{{ isRegisterMode ? 'Create Account' : 'Welcome Back' }}</h2>
+      <p>{{ isRegisterMode ? 'Register a new user' : 'Log in to your Analytics Dashboard' }}</p>
     </div>
 
     <form (submit)="onSubmit($event)">
@@ -16,16 +16,28 @@
         <input type="password" id="password" [(ngModel)]="password" name="password" required placeholder="••••••••">
       </div>
 
-      <div class="form-group">
-        <label for="role">Select Role (Demo Purposes)</label>
+      <div class="form-group" *ngIf="isRegisterMode">
+        <label for="role">Select Role</label>
         <select id="role" [(ngModel)]="role" name="role">
-          <option value="ADMIN">Admin</option>
-          <option value="CORPORATE">Corporate</option>
           <option value="INDIVIDUAL">Individual</option>
+          <option value="CORPORATE">Corporate</option>
         </select>
       </div>
 
-      <button type="submit" class="btn btn-primary w-100">Sign In</button>
+      <div class="success-message" *ngIf="successMessage" style="color: #20c997; margin-bottom: 15px; font-size: 0.9em;">
+        {{ successMessage }}
+      </div>
+      <div class="error-message" *ngIf="errorMessage" style="color: #ff6b6b; margin-bottom: 15px; font-size: 0.9em;">
+        {{ errorMessage }}
+      </div>
+
+      <button type="submit" class="btn btn-primary w-100">{{ isRegisterMode ? 'Register' : 'Sign In' }}</button>
+      
+      <p style="text-align: center; margin-top: 15px; font-size: 0.9em;">
+        <a href="javascript:void(0)" (click)="toggleMode()" style="color: var(--primary-color);">
+          {{ isRegisterMode ? 'Already have an account? Sign In' : 'Don\'t have an account? Register' }}
+        </a>
+      </p>
     </form>
   </div>
 </div>

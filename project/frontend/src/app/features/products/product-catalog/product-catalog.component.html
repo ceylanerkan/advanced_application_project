@@ -1,0 +1,37 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>Browse Products</h2>
+    <p>Explore our full product catalog.</p>
+  </header>
+
+  <div class="toolbar glass-panel">
+    <input type="text" placeholder="🔍 Search products..." [(ngModel)]="searchTerm" (input)="applyFilters()">
+    <select [(ngModel)]="selectedCategory" (change)="applyFilters()">
+      <option value="">All Categories</option>
+      <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+    </select>
+    <select [(ngModel)]="sortBy" (change)="applyFilters()">
+      <option value="name">Sort by Name</option>
+      <option value="price-asc">Price: Low → High</option>
+      <option value="price-desc">Price: High → Low</option>
+      <option value="rating">Top Rated</option>
+    </select>
+    <span style="color: var(--text-secondary); font-size: 0.85rem;">{{ filteredProducts.length }} products</span>
+  </div>
+
+  <div class="product-grid">
+    <div class="glass-panel product-card" *ngFor="let p of filteredProducts" (click)="viewProduct(p.id)">
+      <div class="product-image">📦</div>
+      <span class="category-tag">{{ p.category.name }}</span>
+      <h4>{{ p.name }}</h4>
+      <div class="stars">{{ getStars(p.rating || 0) }} <small style="color: var(--text-secondary)">{{ p.rating }}</small></div>
+      <div class="price">${{ p.unitPrice.toFixed(2) }}</div>
+      <button class="btn btn-primary" style="width: 100%; margin-top: 0.5rem" (click)="addToCart(p, $event)">Add to Cart</button>
+    </div>
+  </div>
+
+  <div *ngIf="filteredProducts.length === 0" class="glass-panel" style="text-align:center; padding: 3rem;">
+    <h3>No products found</h3>
+    <p>Try adjusting your search or filters.</p>
+  </div>
+</div>

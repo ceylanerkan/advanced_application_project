@@ -1,0 +1,35 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>💰 Revenue Reports</h2>
+    <p>Click a month to drill down into daily breakdown.</p>
+  </header>
+
+  <div *ngIf="!selectedMonth">
+    <div class="glass-panel chart-box animate-fade-in" style="height:350px; margin-bottom: 1.5rem;">
+      <h4>Monthly Revenue Overview</h4>
+      <canvas baseChart [type]="'bar'" [data]="monthlyData" [options]="chartOptions"></canvas>
+    </div>
+    <div class="glass-panel data-table-wrapper">
+      <table>
+        <thead><tr><th>Month</th><th>Revenue</th><th>Orders</th><th>Avg Order</th><th>Action</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let m of months">
+            <td><strong>{{ m.name }}</strong></td>
+            <td>${{ m.revenue.toLocaleString() }}</td>
+            <td>{{ m.orders }}</td>
+            <td>${{ m.avgOrder }}</td>
+            <td><button class="action-btn" (click)="drillDown(m.name)">🔍 Drill Down</button></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div *ngIf="selectedMonth">
+    <button class="btn btn-outline" (click)="goBack()" style="margin-bottom: 1rem;">← Back to Overview</button>
+    <div class="glass-panel chart-box animate-fade-in" style="height:350px;">
+      <h4>Daily Revenue — {{ selectedMonth }}</h4>
+      <canvas baseChart [type]="'line'" [data]="dailyData" [options]="chartOptions"></canvas>
+    </div>
+  </div>
+</div>

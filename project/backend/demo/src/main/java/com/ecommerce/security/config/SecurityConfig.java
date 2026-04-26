@@ -30,17 +30,17 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-            .csrf(csrf -> csrf.disable())
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll() // Public endpoints
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/corporate/**").hasAnyRole("ADMIN", "CORPORATE")
-                .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "CORPORATE", "INDIVIDUAL")
-                .anyRequest().authenticated()
-            )
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authenticationProvider(authenticationProvider)
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
+                .cors(org.springframework.security.config.Customizer.withDefaults())
+                .csrf(csrf -> csrf.disable())
+                .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/api/auth/**").permitAll() // Public endpoints
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
+                        .requestMatchers("/api/corporate/**").hasAnyRole("ADMIN", "CORPORATE")
+                        .requestMatchers("/api/user/**").hasAnyRole("ADMIN", "CORPORATE", "INDIVIDUAL")
+                        .anyRequest().authenticated())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authenticationProvider(authenticationProvider)
+                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }

@@ -1,0 +1,49 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>🛒 Order Fulfillment</h2>
+    <p>Manage and process incoming orders.</p>
+  </header>
+
+  <div class="kpi-grid grid grid-cols-4">
+    <div class="glass-panel kpi-card">
+      <h4>Pending</h4>
+      <h2>{{ getCountByStatus('Pending') }}</h2>
+    </div>
+    <div class="glass-panel kpi-card">
+      <h4>Processing</h4>
+      <h2>{{ getCountByStatus('Processing') }}</h2>
+    </div>
+    <div class="glass-panel kpi-card">
+      <h4>Shipped</h4>
+      <h2>{{ getCountByStatus('Shipped') }}</h2>
+    </div>
+    <div class="glass-panel kpi-card">
+      <h4>Delivered</h4>
+      <h2>{{ getCountByStatus('Delivered') }}</h2>
+    </div>
+  </div>
+
+  <div class="glass-panel data-table-wrapper">
+    <table>
+      <thead>
+        <tr><th>Order ID</th><th>Customer</th><th>Items</th><th>Total</th><th>Date</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let o of orders">
+          <td><strong>#{{ o.id }}</strong></td>
+          <td>{{ o.customer }}</td>
+          <td>{{ o.items }}</td>
+          <td>${{ o.total.toFixed(2) }}</td>
+          <td>{{ o.createdAt }}</td>
+          <td><span class="status-badge" [ngClass]="o.status.toLowerCase()">{{ o.status }}</span></td>
+          <td>
+            <button class="action-btn success" *ngIf="getNextStatus(o.status)" (click)="advanceStatus(o)">
+              → {{ getNextStatus(o.status) }}
+            </button>
+            <span *ngIf="!getNextStatus(o.status)" style="color: var(--success); font-size:0.8rem;">✓ Complete</span>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

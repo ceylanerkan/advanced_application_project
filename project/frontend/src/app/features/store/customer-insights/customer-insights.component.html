@@ -1,0 +1,33 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>👥 Customer Insights</h2>
+    <p>Segmentation and behavior analysis.</p>
+  </header>
+
+  <div class="charts-grid grid grid-cols-2">
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Membership Distribution</h4>
+      <canvas baseChart [type]="'doughnut'" [data]="membershipData" [options]="doughnutOptions"></canvas>
+    </div>
+    <div class="glass-panel chart-box animate-fade-in">
+      <h4>Customers by City</h4>
+      <canvas baseChart [type]="'bar'" [data]="cityData" [options]="chartOptions"></canvas>
+    </div>
+  </div>
+
+  <div class="glass-panel data-table-wrapper" style="margin-top: 1.5rem;">
+    <h4 style="margin-bottom: 1rem;">Top Customers</h4>
+    <table>
+      <thead><tr><th>Email</th><th>Membership</th><th>Orders</th><th>Total Spent</th><th>City</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let c of customers">
+          <td>{{ c.email }}</td>
+          <td><span class="status-badge" [ngClass]="c.membership.toLowerCase() === 'gold' ? 'open' : c.membership.toLowerCase() === 'silver' ? 'in-transit' : 'pending'">{{ c.membership }}</span></td>
+          <td>{{ c.orders }}</td>
+          <td>${{ c.totalSpent.toFixed(2) }}</td>
+          <td>{{ c.city }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

@@ -1,0 +1,24 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header"><h2>📋 Audit Logs</h2><p>Activity monitoring and security events.</p></header>
+
+  <div class="toolbar glass-panel">
+    <select [(ngModel)]="actionFilter" (change)="applyFilter()">
+      <option value="">All Actions</option>
+      <option *ngFor="let a of uniqueActions" [value]="a">{{ a }}</option>
+    </select>
+    <span style="color:var(--text-secondary); font-size:0.85rem;">{{ filteredLogs.length }} entries</span>
+  </div>
+
+  <div class="glass-panel data-table-wrapper">
+    <table>
+      <thead><tr><th>ID</th><th>User</th><th>Action</th><th>Target</th><th>IP</th><th>Timestamp</th></tr></thead>
+      <tbody>
+        <tr *ngFor="let l of filteredLogs">
+          <td>{{ l.id }}</td><td>{{ l.user }}</td>
+          <td><span class="status-badge pending">{{ l.action }}</span></td>
+          <td>{{ l.target }}</td><td style="font-family: monospace; font-size:0.8rem;">{{ l.ip }}</td><td>{{ l.timestamp }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
