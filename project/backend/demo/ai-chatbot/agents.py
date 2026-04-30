@@ -1,9 +1,9 @@
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
 # Initialize the LLM
-# We use gemini-1.5-flash as the default since the environment is configured for Gemini.
-llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", temperature=0)
+# We use Meta's Llama 3 70B model via Groq, which is excellent for strict logic and SQL.
+llm = ChatGroq(model="llama3-70b-8192", temperature=0)
 
 def create_agent(system_prompt: str):
     """Helper function to create an agent chain with a specific system prompt."""

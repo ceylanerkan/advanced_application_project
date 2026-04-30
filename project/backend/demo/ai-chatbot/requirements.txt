@@ -1,5 +1,5 @@
 langgraph
-langchain-google-genai
+langchain-groq
 chainlit
 python-dotenv
 pandas
