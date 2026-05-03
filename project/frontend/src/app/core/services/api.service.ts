@@ -7,7 +7,7 @@ import { environment } from '../../../environments/environment';
 export class ApiService {
   private base = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   // ── Auth ──
   login(email: string, password: string): Observable<any> {
@@ -135,4 +135,18 @@ export class ApiService {
   getProfiles(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/customer-profiles`);
   }
+
+  // ── Dashboards ──
+  getIndividualDashboard(userId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/users/${userId}/dashboard`);
+  }
+
+  getStoreDashboard(storeId: number): Observable<any> {
+    return this.http.get<any>(`${this.base}/stores/${storeId}/dashboard`);
+  }
+
+  getAdminDashboard(): Observable<any> {
+    return this.http.get<any>(`${this.base}/admin/dashboard`);
+  }
+
 }
