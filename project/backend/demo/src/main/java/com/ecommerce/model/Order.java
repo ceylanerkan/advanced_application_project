@@ -53,4 +53,10 @@ public class Order {
 
     @Column(name = "created_at")
     private String createdAt; // ISO 8601 String
+
+    @Transient
+    private Integer itemCount;
+
+    @Transient
+    private String itemSummary;
 }

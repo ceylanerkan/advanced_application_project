@@ -17,7 +17,7 @@ export class ReviewManagementComponent implements OnInit {
   constructor(private apiService: ApiService) {}
 
   ngOnInit() {
-    this.apiService.getReviews().subscribe({
+    this.apiService.getMyStoreReviews().subscribe({
       next: (data) => this.reviews = data,
       error: (err) => console.error('Failed to load reviews', err)
     });

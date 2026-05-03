@@ -94,6 +94,12 @@ export const routes: Routes = [
     canActivate: [authGuard, roleGuard],
     data: { roles: ['CORPORATE'] }
   },
+  {
+    path: 'corporate/settings',
+    loadComponent: () => import('./features/store/store-settings/store-settings.component').then(m => m.StoreSettingsComponent),
+    canActivate: [authGuard, roleGuard],
+    data: { roles: ['CORPORATE'] }
+  },
 
   // === Admin ===
   {

@@ -29,6 +29,12 @@ public class ReviewController {
         return ResponseEntity.ok(reviewService.getAllReviews());
     }
 
+    @Operation(summary = "Get reviews for my store", description = "Returns reviews for products belonging to the authenticated user's stores. Admins see all.")
+    @GetMapping("/my-store")
+    public ResponseEntity<List<Review>> getMyStoreReviews(Authentication authentication) {
+        return ResponseEntity.ok(reviewService.getReviewsForMyStore(authentication.getName()));
+    }
+
     @Operation(summary = "Get a review by ID")
     @GetMapping("/{id}")
     public ResponseEntity<Review> getReviewById(@PathVariable Long id) {

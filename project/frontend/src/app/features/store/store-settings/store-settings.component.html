@@ -1,0 +1,26 @@
+<div class="page-content animate-fade-in">
+  <header class="page-header">
+    <h2>⚙️ Store Settings</h2>
+    <p>Manage your store configuration.</p>
+  </header>
+
+  <div class="glass-panel" style="max-width: 480px; padding: 1.5rem;" *ngIf="store; else noStore">
+    <h4 style="margin-bottom: 1rem;">Store Name</h4>
+    <div class="form-group">
+      <label>Name</label>
+      <input [(ngModel)]="storeName" placeholder="Enter store name" style="width:100%;">
+    </div>
+    <div *ngIf="message" [style.color]="isError ? '#ef4444' : '#10b981'" style="margin: 0.5rem 0 0.75rem; font-size: 0.9rem;">
+      {{ message }}
+    </div>
+    <button class="btn btn-primary" (click)="save()" [disabled]="saving || !storeName.trim()">
+      {{ saving ? 'Saving...' : 'Save Changes' }}
+    </button>
+  </div>
+
+  <ng-template #noStore>
+    <div class="glass-panel" style="max-width: 480px; padding: 1.5rem;">
+      <p style="color: var(--text-secondary)">No store found. Please contact an admin.</p>
+    </div>
+  </ng-template>
+</div>

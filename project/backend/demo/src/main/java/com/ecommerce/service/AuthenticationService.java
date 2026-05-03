@@ -9,10 +9,12 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.ecommerce.model.Store;
 import com.ecommerce.model.User;
 import com.ecommerce.model.dto.AuthenticationRequest;
 import com.ecommerce.model.dto.AuthenticationResponse;
 import com.ecommerce.model.dto.RegisterRequest;
+import com.ecommerce.repository.StoreRepository;
 import com.ecommerce.repository.UserRepository;
 import com.ecommerce.security.service.JwtService;
 
@@ -23,6 +25,7 @@ import lombok.RequiredArgsConstructor;
 public class AuthenticationService {
 
     private final UserRepository userRepository;
+    private final StoreRepository storeRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
@@ -52,6 +55,14 @@ public class AuthenticationService {
         user.setCreatedAt(LocalDateTime.now().toString());
 
         User savedUser = userRepository.save(user);
+
+        if ("CORPORATE".equalsIgnoreCase(savedUser.getRoleType())) {
+            Store defaultStore = new Store();
+            defaultStore.setOwner(savedUser);
+            defaultStore.setName(savedUser.getEmail().split("@")[0] + "'s Store");
+            defaultStore.setStatus("active");
+            storeRepository.save(defaultStore);
+        }
 
         String accessToken = jwtService.generateToken(savedUser);
         String refreshToken = jwtService.generateRefreshToken(savedUser);

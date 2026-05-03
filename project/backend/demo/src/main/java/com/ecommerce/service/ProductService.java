@@ -10,8 +10,10 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.model.Product;
+import com.ecommerce.model.Store;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.ProductRepository;
+import com.ecommerce.repository.StoreRepository;
 import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -22,9 +24,21 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final StoreRepository storeRepository;
 
     public List<Product> getAllProducts() {
         return productRepository.findAll();
+    }
+
+    public List<Product> getMyProducts(String email) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
+        List<Store> stores = storeRepository.findByOwner_Id(currentUser.getId());
+        List<Product> result = new java.util.ArrayList<>();
+        for (Store store : stores) {
+            result.addAll(productRepository.findByStoreId(store.getId()));
+        }
+        return result;
     }
 
     public Page<Product> getProductsPaged(int page, int size) {

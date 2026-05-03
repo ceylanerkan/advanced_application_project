@@ -14,6 +14,7 @@ export class OrderTrackingComponent implements OnInit {
   orderId = 0;
   order: any = null;
   shipment: any = null;
+  items: any[] = [];
   trackingSteps = [
     { label: 'Order Placed', status: '', date: '', desc: 'Your order has been confirmed.' },
     { label: 'Processing', status: '', date: '', desc: 'Order is being processed at the warehouse.' },
@@ -33,6 +34,11 @@ export class OrderTrackingComponent implements OnInit {
         this.updateTimeline(this.order.status);
       },
       error: (err) => console.error('Failed to load order', err)
+    });
+
+    this.apiService.getOrderItems(this.orderId).subscribe({
+      next: (data) => this.items = data,
+      error: () => this.items = []
     });
 
     this.apiService.getShipmentByOrder(this.orderId).subscribe({

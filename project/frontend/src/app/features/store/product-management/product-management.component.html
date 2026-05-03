@@ -9,6 +9,10 @@
     </div>
   </header>
 
+  <div *ngIf="hasNoStore" class="glass-panel" style="padding:1rem; color:#f59e0b; margin-bottom:1rem;">
+    ⚠️ You have no store yet. Please ask an admin to create one for you before adding products.
+  </div>
+
   <div class="glass-panel data-table-wrapper">
     <table>
       <thead>
@@ -21,7 +25,7 @@
           <td>{{ p.id }}</td>
           <td><strong>{{ p.name }}</strong></td>
           <td>{{ p.sku }}</td>
-          <td>{{ p.category }}</td>
+          <td>{{ p.category?.name }}</td>
           <td>${{ p.unitPrice.toFixed(2) }}</td>
           <td>
             <span [ngClass]="{'text-danger': p.stock < 20, 'text-warning': p.stock >= 20 && p.stock < 50}">{{ p.stock }}</span>
@@ -41,7 +45,12 @@
       <h3>{{ editMode ? 'Edit Product' : 'Add New Product' }}</h3>
       <div class="form-group"><label>Name</label><input [(ngModel)]="currentProduct.name" placeholder="Product name"></div>
       <div class="form-group"><label>SKU</label><input [(ngModel)]="currentProduct.sku" placeholder="SKU-0001"></div>
-      <div class="form-group"><label>Category</label><input [(ngModel)]="currentProduct.category" placeholder="Electronics"></div>
+      <div class="form-group">
+        <label>Category</label>
+        <select [(ngModel)]="currentProduct.categoryId" style="width:100%; padding:0.6rem; border-radius:0.5rem; background:#1e293b; color:#f8fafc; border:1px solid #334155;">
+          <option *ngFor="let cat of categories" [value]="cat.id">{{ cat.name }}</option>
+        </select>
+      </div>
       <div style="display:flex; gap: 0.75rem;">
         <div class="form-group" style="flex:1"><label>Price ($)</label><input type="number" [(ngModel)]="currentProduct.unitPrice"></div>
         <div class="form-group" style="flex:1"><label>Stock</label><input type="number" [(ngModel)]="currentProduct.stock"></div>

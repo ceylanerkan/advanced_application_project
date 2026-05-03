@@ -28,4 +28,7 @@ public class Store {
 
     @Transient
     private Double revenue;
+
+    @Transient
+    private Double avgRating;
 }

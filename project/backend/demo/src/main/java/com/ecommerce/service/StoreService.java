@@ -46,6 +46,8 @@ public class StoreService {
             List<Order> orders = orderRepository.findByStoreId(s.getId());
             double rev = orders.stream().mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0).sum();
             s.setRevenue(rev);
+            Double avg = productRepository.getAverageRatingByStoreId(s.getId());
+            s.setAvgRating(avg != null ? Math.round(avg * 10.0) / 10.0 : 0.0);
         }
         
         return stores;

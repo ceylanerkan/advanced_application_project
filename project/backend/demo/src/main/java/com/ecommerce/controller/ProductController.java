@@ -39,6 +39,12 @@ public class ProductController {
         return ResponseEntity.ok(productService.getAllProducts());
     }
 
+    @Operation(summary = "Get my products", description = "Returns only products belonging to the current user's stores.")
+    @GetMapping("/mine")
+    public ResponseEntity<List<Product>> getMyProducts(Authentication authentication) {
+        return ResponseEntity.ok(productService.getMyProducts(authentication.getName()));
+    }
+
     @Operation(summary = "Get a product by ID", description = "Retrieves the details of a specific product.")
     @GetMapping("/{id}")
     public ResponseEntity<Product> getProductById(@PathVariable Long id) {

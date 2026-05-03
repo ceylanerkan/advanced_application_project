@@ -83,7 +83,7 @@ export class CorporateDashboardComponent implements OnInit {
               this.totalRevenue = data.totalRevenue || 0;
               this.totalOrders = data.totalOrders || 0;
               this.activeProducts = data.activeProducts || 0;
-              this.avgRating = data.avgRating || 0;
+              this.avgRating = Number(data.avgRating) || 0;
 
               this.barChartData.labels = data.weekLabels;
               this.barChartData.datasets[0].data = data.weekValues;

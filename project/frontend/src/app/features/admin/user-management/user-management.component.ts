@@ -47,8 +47,23 @@ export class UserManagementComponent implements OnInit {
     this.filteredUsers = this.users.filter(u => u.email.includes(t) || u.roleType.toLowerCase().includes(t));
   }
 
+  jumpPage = 1;
+
   prevPage() { if (this.currentPage > 0) this.loadUsers(this.currentPage - 1); }
   nextPage() { if (this.currentPage < this.totalPages - 1) this.loadUsers(this.currentPage + 1); }
+
+  goToPage(page: number) {
+    const p = Math.max(0, Math.min(Math.floor(page), this.totalPages - 1));
+    if (p !== this.currentPage) this.loadUsers(p);
+  }
+
+  getPageRange(): number[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+    const cur = this.currentPage;
+    const start = Math.max(0, Math.min(cur - 2, total - 5));
+    return Array.from({ length: 5 }, (_, i) => start + i);
+  }
 
   toggleStatus(user: any) {
     // Ideally this would hit a backend endpoint to toggle status.
@@ -59,7 +74,7 @@ export class UserManagementComponent implements OnInit {
     if (confirm('Are you sure you want to delete this user?')) {
       this.apiService.deleteUser(id).subscribe({
         next: () => this.loadUsers(),
-        error: (err) => alert('Failed to delete user')
+        error: () => alert('Failed to delete user')
       });
     }
   }
@@ -71,7 +86,7 @@ export class UserManagementComponent implements OnInit {
         this.newUser = { email: '', roleType: 'INDIVIDUAL', password: '' };
         this.showModal = false;
       },
-      error: (err) => alert('Failed to create user')
+      error: () => alert('Failed to create user')
     });
   }
 }

@@ -15,7 +15,7 @@ export class InventoryComponent implements OnInit {
   constructor(private apiService: ApiService) {}
 
   ngOnInit() {
-    this.apiService.getProducts().subscribe({
+    this.apiService.getMyProducts().subscribe({
       next: (products: any[]) => {
         this.inventory = products.map(p => ({
           id: p.id,

@@ -31,9 +31,9 @@
       <tbody>
         <tr *ngFor="let o of orders">
           <td><strong>#{{ o.id }}</strong></td>
-          <td>{{ o.customer }}</td>
-          <td>{{ o.items }}</td>
-          <td>${{ o.total.toFixed(2) }}</td>
+          <td>{{ o.user?.email || '—' }}</td>
+          <td>{{ o.itemSummary || (o.itemCount + ' item(s)') }}</td>
+          <td>${{ o.grandTotal?.toFixed(2) || '0.00' }}</td>
           <td>{{ o.createdAt?.split('T')[0] || '-' }}</td>
           <td><span class="status-badge" [ngClass]="o.status.toLowerCase()">{{ o.status }}</span></td>
           <td>
