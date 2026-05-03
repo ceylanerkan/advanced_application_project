@@ -19,7 +19,12 @@
     <span style="color: var(--text-secondary); font-size: 0.85rem;">{{ filteredProducts.length }} products</span>
   </div>
 
-  <div class="product-grid">
+  <div *ngIf="isLoading" style="text-align:center; padding: 3rem;">
+    <span style="font-size:2rem;">⏳</span>
+    <p style="color: var(--text-secondary)">Loading products...</p>
+  </div>
+
+  <div class="product-grid" *ngIf="!isLoading">
     <div class="glass-panel product-card" *ngFor="let p of filteredProducts" (click)="viewProduct(p.id)">
       <div class="product-image">📦</div>
       <span class="category-tag">{{ p.category.name }}</span>
@@ -30,8 +35,14 @@
     </div>
   </div>
 
-  <div *ngIf="filteredProducts.length === 0" class="glass-panel" style="text-align:center; padding: 3rem;">
+  <div *ngIf="!isLoading && filteredProducts.length === 0" class="glass-panel" style="text-align:center; padding: 3rem;">
     <h3>No products found</h3>
     <p>Try adjusting your search or filters.</p>
+  </div>
+
+  <div *ngIf="!isLoading && totalPages > 1" class="glass-panel" style="display:flex; align-items:center; justify-content:center; gap:1rem; padding:1rem; margin-top:1rem;">
+    <button class="btn btn-outline" (click)="prevPage()" [disabled]="currentPage === 0">← Prev</button>
+    <span style="color: var(--text-secondary)">Page {{ currentPage + 1 }} of {{ totalPages }} &nbsp;({{ totalElements }} products)</span>
+    <button class="btn btn-outline" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">Next →</button>
   </div>
 </div>

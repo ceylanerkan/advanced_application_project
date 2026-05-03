@@ -26,9 +26,9 @@ export class ProductDetailComponent implements OnInit {
     this.apiService.getProduct(id).subscribe({
       next: (data) => {
         this.product = data;
-        // Mock rating until reviews API is fully fleshed out on frontend side
+        // Using real averageRating from backend now
         if (!this.product.rating) {
-          this.product.rating = (Math.random() * 2 + 3).toFixed(1);
+          this.product.rating = this.product.averageRating || 0;
         }
       },
       error: (err) => {

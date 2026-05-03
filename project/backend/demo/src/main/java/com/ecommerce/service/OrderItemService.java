@@ -7,9 +7,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.model.Order;
 import com.ecommerce.model.OrderItem;
+import com.ecommerce.model.Product;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.OrderItemRepository;
+import com.ecommerce.repository.OrderRepository;
+import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +24,8 @@ public class OrderItemService {
 
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
+    private final OrderRepository orderRepository;
+    private final ProductRepository productRepository;
 
     public List<OrderItem> getAllOrderItems(String email) {
         User currentUser = userRepository.findByEmail(email)
@@ -53,12 +59,26 @@ public class OrderItemService {
     public OrderItem createOrderItem(OrderItem orderItem, String email) {
         User currentUser = userRepository.findByEmail(email).orElseThrow();
 
+        if (orderItem.getOrder() == null || orderItem.getOrder().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Order ID is required");
+        }
+        Order order = orderRepository.findById(orderItem.getOrder().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
+
+        if (orderItem.getProduct() == null || orderItem.getProduct().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product ID is required");
+        }
+        Product product = productRepository.findById(orderItem.getProduct().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
-            // Ensure the order belongs to the current user
-            if (!orderItem.getOrder().getUser().getId().equals(currentUser.getId())) {
+            if (!order.getUser().getId().equals(currentUser.getId())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only add items to your own orders");
             }
         }
+
+        orderItem.setOrder(order);
+        orderItem.setProduct(product);
         return orderItemRepository.save(orderItem);
     }
 

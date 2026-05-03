@@ -1,7 +1,11 @@
 package com.ecommerce.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -11,6 +15,8 @@ import com.ecommerce.exception.ResourceNotFoundException;
 import com.ecommerce.model.Order;
 import com.ecommerce.model.User;
 import com.ecommerce.repository.OrderRepository;
+import com.ecommerce.repository.StoreRepository;
+import com.ecommerce.model.Store;
 import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
@@ -20,6 +26,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final StoreRepository storeRepository;
     private final UserRepository userRepository;
 
     // Helper method to fetch the current user via email
@@ -28,13 +35,39 @@ public class OrderService {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
     }
 
+    public Page<Order> getOrdersPaged(String email, int page, int size) {
+        User currentUser = getAuthenticatedUser(email);
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            return orderRepository.findAll(pageRequest);
+        } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
+            List<Store> stores = storeRepository.findByOwner_Id(currentUser.getId());
+            List<Order> all = new java.util.ArrayList<>();
+            for (Store s : stores) {
+                all.addAll(orderRepository.findByStoreId(s.getId()));
+            }
+            int start = (int) pageRequest.getOffset();
+            int end = Math.min(start + pageRequest.getPageSize(), all.size());
+            List<Order> slice = start >= all.size() ? new java.util.ArrayList<>() : all.subList(start, end);
+            return new PageImpl<>(slice, pageRequest, all.size());
+        } else {
+            return orderRepository.findByUser_Email(currentUser.getEmail(), pageRequest);
+        }
+    }
+
     public List<Order> getAllOrders(String email) {
         User currentUser = getAuthenticatedUser(email);
 
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
             return orderRepository.findAll();
         } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
-            return orderRepository.findAll(); // Corporate users see all orders for now
+            List<Store> stores = storeRepository.findByOwner_Id(currentUser.getId());
+            List<Order> corporateOrders = new java.util.ArrayList<>();
+            for (Store s : stores) {
+                corporateOrders.addAll(orderRepository.findByStoreId(s.getId()));
+            }
+            return corporateOrders;
         } else {
             // INDIVIDUAL user
             return orderRepository.findByUser_Email(currentUser.getEmail());
@@ -61,12 +94,15 @@ public class OrderService {
 
     public Order createOrder(Order order, String email) {
         User currentUser = getAuthenticatedUser(email);
+        order.setUser(currentUser);
 
-        // Security Check: Prevent Mass Assignment (AV-11)
-        // Force the order to belong to the person creating it.
-        if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
-            order.setUser(currentUser); 
+        if (order.getStore() == null || order.getStore().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Store ID is required");
         }
+        Store store = storeRepository.findById(order.getStore().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Store not found"));
+        order.setStore(store);
+        order.setCreatedAt(LocalDateTime.now().toString());
 
         return orderRepository.save(order);
     }
@@ -82,7 +118,7 @@ public class OrderService {
         order.setBaseCurrency(orderDetails.getBaseCurrency());
         order.setOriginalCurrency(orderDetails.getOriginalCurrency());
         order.setExchangeRate(orderDetails.getExchangeRate());
-        order.setCreatedAt(orderDetails.getCreatedAt());
+        // createdAt is intentionally not updated — preserve original timestamp
         
         // Security Check: Only Admins can reassign an order to a different user or store
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {

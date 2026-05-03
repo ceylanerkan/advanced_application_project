@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-inventory',
@@ -11,15 +12,22 @@ import { CommonModule } from '@angular/common';
 export class InventoryComponent implements OnInit {
   inventory: any[] = [];
 
+  constructor(private apiService: ApiService) {}
+
   ngOnInit() {
-    this.inventory = Array.from({ length: 20 }, (_, i) => ({
-      id: i + 1,
-      name: `Product ${i + 1}`,
-      sku: `SKU-${String(i + 1).padStart(4, '0')}`,
-      stock: Math.floor(Math.random() * 300),
-      reorderLevel: 30,
-      lastRestocked: `2026-03-${String(10 + (i % 20)).padStart(2, '0')}`
-    }));
+    this.apiService.getProducts().subscribe({
+      next: (products: any[]) => {
+        this.inventory = products.map(p => ({
+          id: p.id,
+          name: p.name,
+          sku: `SKU-${String(p.id).padStart(4, '0')}`,
+          stock: p.stock || 0,
+          reorderLevel: 30, // threshold
+          lastRestocked: 'N/A'
+        }));
+      },
+      error: (err: any) => console.error('Failed to load inventory', err)
+    });
   }
 
   get lowStockCount(): number {

@@ -19,21 +19,26 @@
       <p>Performance metrics for your stores.</p>
     </header>
 
-    <div class="kpi-grid grid grid-cols-3">
+    <div class="kpi-grid grid grid-cols-4">
       <div class="glass-panel kpi-card">
-        <h4>Monthly Sales</h4>
-        <h2>$45,230</h2>
-        <span class="text-success">+8% this month</span>
+        <h4>Total Revenue</h4>
+        <h2>${{ totalRevenue.toFixed(2) }}</h2>
+        <span class="text-success">Lifetime</span>
       </div>
       <div class="glass-panel kpi-card">
-        <h4>Orders Fulfilled</h4>
-        <h2>1,204</h2>
-        <span class="text-warning">-1% this month</span>
+        <h4>Total Orders</h4>
+        <h2>{{ totalOrders }}</h2>
+        <span class="text-success">Lifetime</span>
+      </div>
+      <div class="glass-panel kpi-card">
+        <h4>Active Products</h4>
+        <h2>{{ activeProducts }}</h2>
+        <span class="text-secondary">In Catalog</span>
       </div>
       <div class="glass-panel kpi-card">
         <h4>Avg Rating</h4>
-        <h2>4.7 / 5</h2>
-        <span class="text-success">+0.2 this month</span>
+        <h2>{{ avgRating.toFixed(1) }} / 5</h2>
+        <span class="text-success">Lifetime</span>
       </div>
     </div>
 

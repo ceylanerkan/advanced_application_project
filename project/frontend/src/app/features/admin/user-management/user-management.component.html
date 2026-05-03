@@ -8,10 +8,15 @@
 
   <div class="toolbar glass-panel">
     <input type="text" placeholder="🔍 Search by email or role..." [(ngModel)]="searchTerm" (input)="applyFilter()">
-    <span style="color: var(--text-secondary); font-size:0.85rem;">{{ filteredUsers.length }} users</span>
+    <span style="color: var(--text-secondary); font-size:0.85rem;">{{ filteredUsers.length }} shown / {{ totalElements }} total</span>
   </div>
 
-  <div class="glass-panel data-table-wrapper">
+  <div *ngIf="isLoading" style="text-align:center; padding: 3rem;">
+    <span style="font-size:2rem;">⏳</span>
+    <p style="color: var(--text-secondary)">Loading users...</p>
+  </div>
+
+  <div class="glass-panel data-table-wrapper" *ngIf="!isLoading">
     <table>
       <thead><tr><th>ID</th><th>Email</th><th>Role</th><th>Gender</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
       <tbody>
@@ -21,14 +26,23 @@
           <td><span class="status-badge" [ngClass]="u.roleType === 'ADMIN' ? 'open' : u.roleType === 'CORPORATE' ? 'in-transit' : 'pending'">{{ u.roleType }}</span></td>
           <td>{{ u.gender }}</td>
           <td><span class="status-badge" [ngClass]="u.status === 'Active' ? 'active' : 'suspended'">{{ u.status }}</span></td>
-          <td>{{ u.createdAt }}</td>
+          <td>{{ u.createdAt?.split('T')[0] || '-' }}</td>
           <td>
             <button class="action-btn" (click)="toggleStatus(u)">{{ u.status === 'Active' ? '⏸ Suspend' : '▶ Activate' }}</button>
             <button class="action-btn danger" (click)="deleteUser(u.id)">🗑️</button>
           </td>
         </tr>
+        <tr *ngIf="filteredUsers.length === 0">
+          <td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-secondary)">No users found.</td>
+        </tr>
       </tbody>
     </table>
+  </div>
+
+  <div *ngIf="!isLoading && totalPages > 1" class="glass-panel" style="display:flex; align-items:center; justify-content:center; gap:1rem; padding:1rem; margin-top:1rem;">
+    <button class="btn btn-outline" (click)="prevPage()" [disabled]="currentPage === 0">← Prev</button>
+    <span style="color: var(--text-secondary)">Page {{ currentPage + 1 }} of {{ totalPages }}</span>
+    <button class="btn btn-outline" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">Next →</button>
   </div>
 
   <div class="modal-overlay" *ngIf="showModal" (click)="showModal = false">

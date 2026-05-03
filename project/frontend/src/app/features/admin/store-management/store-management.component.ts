@@ -23,8 +23,8 @@ export class StoreManagementComponent implements OnInit {
       next: (data) => {
         this.stores = data.map(s => ({
           ...s,
-          products: s.products || Math.floor(Math.random() * 100),
-          revenue: s.revenue || Math.floor(Math.random() * 50000)
+          products: s.products || 0,
+          revenue: s.revenue || 0
         }));
       },
       error: (err) => console.error('Failed to load stores', err)

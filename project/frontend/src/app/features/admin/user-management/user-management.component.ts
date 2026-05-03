@@ -16,6 +16,10 @@ export class UserManagementComponent implements OnInit {
   searchTerm = '';
   showModal = false;
   newUser: any = { email: '', roleType: 'INDIVIDUAL', password: '' };
+  isLoading = false;
+  currentPage = 0;
+  totalPages = 0;
+  totalElements = 0;
 
   constructor(private apiService: ApiService) {}
 
@@ -23,13 +27,18 @@ export class UserManagementComponent implements OnInit {
     this.loadUsers();
   }
 
-  loadUsers() {
-    this.apiService.getUsers().subscribe({
+  loadUsers(page = this.currentPage) {
+    this.isLoading = true;
+    this.apiService.getUsersPaged(page).subscribe({
       next: (data) => {
-        this.users = data;
-        this.filteredUsers = data;
+        this.users = data.content ?? [];
+        this.currentPage = data.number ?? 0;
+        this.totalPages = data.totalPages ?? 1;
+        this.totalElements = data.totalElements ?? this.users.length;
+        this.applyFilter();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Failed to load users', err)
+      error: (err) => { console.error('Failed to load users', err); this.isLoading = false; }
     });
   }
 
@@ -37,6 +46,9 @@ export class UserManagementComponent implements OnInit {
     const t = this.searchTerm.toLowerCase();
     this.filteredUsers = this.users.filter(u => u.email.includes(t) || u.roleType.toLowerCase().includes(t));
   }
+
+  prevPage() { if (this.currentPage > 0) this.loadUsers(this.currentPage - 1); }
+  nextPage() { if (this.currentPage < this.totalPages - 1) this.loadUsers(this.currentPage + 1); }
 
   toggleStatus(user: any) {
     // Ideally this would hit a backend endpoint to toggle status.

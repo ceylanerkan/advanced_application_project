@@ -113,4 +113,76 @@ public class AdminController {
         orderService.deleteOrder(orderId, authentication.getName());
         return ResponseEntity.noContent().build();
     }
+
+    // ─── Dashboard Management ────────────────────────────────────────────
+    @GetMapping("/dashboard")
+    public ResponseEntity<java.util.Map<String, Object>> getAdminDashboard(Authentication authentication) {
+        java.util.Map<String, Object> response = new java.util.HashMap<>();
+        
+        List<Order> orders = orderService.getAllOrders(authentication.getName());
+        
+        // Let's use orderRepository from orderService to calculate this
+        // Actually since we don't have orderRepository directly, we'll just process the orders list:
+        double[] monthlyRevenue = new double[7];
+        String[] monthLabels = new String[7];
+        java.time.LocalDate now = java.time.LocalDate.now();
+        for (int i = 0; i < 7; i++) {
+            java.time.LocalDate monthDate = now.minusMonths(6 - i);
+            monthLabels[i] = monthDate.format(java.time.format.DateTimeFormatter.ofPattern("MMM"));
+            final int m = monthDate.getMonthValue();
+            final int y = monthDate.getYear();
+            monthlyRevenue[i] = orders.stream()
+                .filter(o -> {
+                    if (o.getCreatedAt() == null) return false;
+                    try {
+                        java.time.LocalDate d = java.time.LocalDate.parse(o.getCreatedAt().substring(0, 10));
+                        return d.getMonthValue() == m && d.getYear() == y;
+                    } catch(Exception e) { return false; }
+                })
+                .mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0)
+                .sum();
+        }
+        
+        java.util.List<Double> monthlyRevList = new java.util.ArrayList<>();
+        for(double d : monthlyRevenue) monthlyRevList.add(d);
+
+        java.util.Map<String, Integer> regionTotals = new java.util.HashMap<>();
+        for (Order o : orders) {
+            String city = o.getShippingCity() != null ? o.getShippingCity() : "Unknown";
+            // Map city to a broader region for the admin dashboard (demo purposes)
+            String region = "Others";
+            if (city.equalsIgnoreCase("New York") || city.equalsIgnoreCase("Chicago") || city.equalsIgnoreCase("Houston") || city.equalsIgnoreCase("Los Angeles") || city.equalsIgnoreCase("Phoenix")) {
+                region = "North America";
+            } else if (city.equalsIgnoreCase("London") || city.equalsIgnoreCase("Paris") || city.equalsIgnoreCase("Berlin")) {
+                region = "Europe";
+            } else if (city.equalsIgnoreCase("Tokyo") || city.equalsIgnoreCase("Beijing") || city.equalsIgnoreCase("Seoul")) {
+                region = "Asia";
+            }
+            regionTotals.put(region, regionTotals.getOrDefault(region, 0) + 1);
+        }
+
+        java.util.List<String> regionLabels = new java.util.ArrayList<>(regionTotals.keySet());
+        java.util.List<Integer> regionValues = new java.util.ArrayList<>(regionTotals.values());
+        if (regionLabels.isEmpty()) {
+            regionLabels = java.util.Arrays.asList("North America", "Europe", "Asia", "Others");
+            regionValues = java.util.Arrays.asList(0, 0, 0, 0);
+        }
+
+        double totalRevenueStr = orders.stream().mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0).sum();
+        long totalOrders = orders.size();
+        long totalUsers = userService.getAllUsers(authentication.getName()).size();
+        long activeStores = storeService.getAllStores(authentication.getName()).stream().filter(s -> "OPEN".equalsIgnoreCase(s.getStatus())).count();
+
+        response.put("monthLabels", java.util.Arrays.asList(monthLabels));
+        response.put("monthValues", monthlyRevList);
+        response.put("regionLabels", regionLabels);
+        response.put("regionValues", regionValues);
+        
+        response.put("totalUsers", totalUsers);
+        response.put("totalRevenue", totalRevenueStr);
+        response.put("activeStores", activeStores);
+        response.put("totalOrders", totalOrders);
+
+        return ResponseEntity.ok(response);
+    }
 }

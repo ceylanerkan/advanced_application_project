@@ -23,6 +23,10 @@ export class ApiService {
     return this.http.get<any[]>(`${this.base}/products`);
   }
 
+  getProductsPaged(page = 0, size = 20): Observable<any> {
+    return this.http.get<any>(`${this.base}/products?page=${page}&size=${size}`);
+  }
+
   getProduct(id: number): Observable<any> {
     return this.http.get<any>(`${this.base}/products/${id}`);
   }
@@ -61,6 +65,10 @@ export class ApiService {
     return this.http.get<any[]>(`${this.base}/orders`);
   }
 
+  getOrdersPaged(page = 0, size = 20): Observable<any> {
+    return this.http.get<any>(`${this.base}/orders?page=${page}&size=${size}`);
+  }
+
   getOrder(id: number): Observable<any> {
     return this.http.get<any>(`${this.base}/orders/${id}`);
   }
@@ -85,6 +93,10 @@ export class ApiService {
   // ── Users ──
   getUsers(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/users`);
+  }
+
+  getUsersPaged(page = 0, size = 20): Observable<any> {
+    return this.http.get<any>(`${this.base}/users?page=${page}&size=${size}`);
   }
 
   getUser(id: number): Observable<any> {

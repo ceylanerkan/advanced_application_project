@@ -16,7 +16,7 @@ export class ProductManagementComponent implements OnInit {
   categories: any[] = [];
   showModal = false;
   editMode = false;
-  currentProduct: any = { name: '', sku: '', unitPrice: 0, categoryId: null };
+  currentProduct: any = { name: '', sku: '', unitPrice: 0, categoryId: null, stock: 0 };
 
   constructor(private apiService: ApiService, private authService: AuthService) {}
 
@@ -31,7 +31,7 @@ export class ProductManagementComponent implements OnInit {
         // Assume corporate user only sees their products (backend usually handles this filter via token)
         this.products = data.map(p => ({
           ...p,
-          stock: p.stock || Math.floor(Math.random() * 200) // Mock stock
+          stock: p.stock || 0
         }));
       },
       error: (err) => console.error('Failed to load products', err)
@@ -40,7 +40,7 @@ export class ProductManagementComponent implements OnInit {
 
   openCreate() {
     this.editMode = false;
-    this.currentProduct = { name: '', sku: '', unitPrice: 0, categoryId: this.categories[0]?.id };
+    this.currentProduct = { name: '', sku: '', unitPrice: 0, categoryId: this.categories[0]?.id, stock: 0 };
     this.showModal = true;
   }
 
@@ -60,7 +60,8 @@ export class ProductManagementComponent implements OnInit {
       unitPrice: this.currentProduct.unitPrice,
       baseCurrency: 'USD',
       category: { id: this.currentProduct.categoryId },
-      store: { id: 1 } // Would ideally use the corporate user's actual store_id
+      store: { id: 1 }, // Would ideally use the corporate user's actual store_id
+      stock: this.currentProduct.stock
     };
 
     if (this.editMode) {

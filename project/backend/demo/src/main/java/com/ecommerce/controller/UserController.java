@@ -3,6 +3,7 @@ package com.ecommerce.controller;
 import java.util.List;
 
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.model.User;
@@ -28,9 +30,16 @@ public class UserController {
 
     private final UserService userService;
 
-    @Operation(summary = "Get all users (ADMIN only)", description = "Retrieves a complete list of all registered users.")
+    @Operation(summary = "Get all users (ADMIN only)", description = "Retrieves users. Add ?page=0&size=20 for paginated results.")
     @GetMapping
-    public ResponseEntity<List<User>> getAllUsers(Authentication authentication) {
+    public ResponseEntity<?> getAllUsers(
+            Authentication authentication,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null && size != null) {
+            Page<User> result = userService.getUsersPaged(authentication.getName(), page, size);
+            return ResponseEntity.ok(result);
+        }
         return ResponseEntity.ok(userService.getAllUsers(authentication.getName()));
     }
 

@@ -1,5 +1,7 @@
 package com.ecommerce.service;
 
+import java.time.LocalDateTime;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,6 +49,7 @@ public class AuthenticationService {
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
         user.setRoleType(role.toUpperCase());
         user.setGender(request.getGender());
+        user.setCreatedAt(LocalDateTime.now().toString());
 
         User savedUser = userRepository.save(user);
 
@@ -58,6 +61,7 @@ public class AuthenticationService {
                 .refreshToken(refreshToken)
                 .email(savedUser.getEmail())
                 .role(savedUser.getRoleType())
+                .userId(savedUser.getId())
                 .build();
     }
 
@@ -85,6 +89,7 @@ public class AuthenticationService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRoleType())
+                .userId(user.getId())
                 .build();
     }
 
@@ -108,6 +113,7 @@ public class AuthenticationService {
                 .refreshToken(refreshToken)
                 .email(user.getEmail())
                 .role(user.getRoleType())
+                .userId(user.getId())
                 .build();
     }
 }

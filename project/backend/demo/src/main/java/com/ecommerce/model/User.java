@@ -35,6 +35,9 @@ public class User implements UserDetails {
 
     private String gender;
 
+    @Column(name = "created_at")
+    private String createdAt;
+
     // --- Spring Security UserDetails Methods ---
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {

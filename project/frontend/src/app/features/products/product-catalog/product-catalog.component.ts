@@ -30,30 +30,41 @@ export class ProductCatalogComponent implements OnInit {
   searchTerm = '';
   selectedCategory = '';
   sortBy = 'name';
+  isLoading = false;
+  currentPage = 0;
+  totalPages = 0;
+  totalElements = 0;
 
   constructor(private router: Router, private apiService: ApiService) {}
 
   ngOnInit() {
-    this.apiService.getProducts().subscribe({
+    this.loadPage(0);
+  }
+
+  loadPage(page: number) {
+    this.isLoading = true;
+    this.apiService.getProductsPaged(page).subscribe({
       next: (data) => {
-        // Map backend product data
-        this.products = data.map(p => ({
+        const items = data.content ?? [];
+        this.currentPage = data.number ?? 0;
+        this.totalPages = data.totalPages ?? 1;
+        this.totalElements = data.totalElements ?? items.length;
+        this.products = items.map((p: any) => ({
           ...p,
-          rating: p.rating || (Math.random() * 2 + 3).toFixed(1), // Mock rating since backend doesn't have it
-          stock: p.stock || Math.floor(Math.random() * 100) + 10 // Mock stock
+          rating: p.averageRating || 0,
+          stock: p.stock || 0,
+          category: p.category ?? { name: 'Uncategorized' }
         }));
-        // Ensure category object exists to prevent errors
-        this.products.forEach(p => {
-          if (!p.category) {
-            p.category = { name: 'Uncategorized' };
-          }
-        });
         this.categories = [...new Set(this.products.map(p => p.category.name))].filter(Boolean);
         this.applyFilters();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Failed to load products', err)
+      error: (err) => { console.error('Failed to load products', err); this.isLoading = false; }
     });
   }
+
+  prevPage() { if (this.currentPage > 0) this.loadPage(this.currentPage - 1); }
+  nextPage() { if (this.currentPage < this.totalPages - 1) this.loadPage(this.currentPage + 1); }
 
   getStars(rating: number | string): string {
     const num = Number(rating);

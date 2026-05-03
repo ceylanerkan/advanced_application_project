@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NgChartsModule } from 'ng2-charts';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { ApiService } from '../../../core/services/api.service';
 
 @Component({
   selector: 'app-revenue-reports',
@@ -24,26 +25,87 @@ export class RevenueReportsComponent {
   };
 
   monthlyData: ChartConfiguration<'bar'>['data'] = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
-    datasets: [{ data: [42000, 38000, 51000, 47000, 53000, 61000], label: 'Monthly Revenue ($)', backgroundColor: '#3b82f6' }]
+    labels: [],
+    datasets: [{ data: [], label: 'Monthly Revenue ($)', backgroundColor: '#3b82f6' }]
   };
 
   dailyData: ChartConfiguration<'line'>['data'] = {
-    labels: Array.from({ length: 30 }, (_, i) => `Day ${i + 1}`),
-    datasets: [{ data: Array.from({ length: 30 }, () => Math.floor(Math.random() * 3000 + 500)), label: 'Daily Revenue ($)', tension: 0.3, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', fill: true }]
+    labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    datasets: [{ data: [], label: 'Daily Revenue ($)', tension: 0.3, borderColor: '#10b981', backgroundColor: 'rgba(16,185,129,0.2)', fill: true }]
   };
 
-  months = [
-    { name: 'January', revenue: 42000, orders: 320, avgOrder: 131 },
-    { name: 'February', revenue: 38000, orders: 280, avgOrder: 136 },
-    { name: 'March', revenue: 51000, orders: 410, avgOrder: 124 },
-    { name: 'April', revenue: 47000, orders: 370, avgOrder: 127 },
-    { name: 'May', revenue: 53000, orders: 420, avgOrder: 126 },
-    { name: 'June', revenue: 61000, orders: 490, avgOrder: 124 }
-  ];
+  months: any[] = [];
+  allOrders: any[] = [];
 
-  drillDown(month: string) {
-    this.selectedMonth = month;
+  constructor(private apiService: ApiService) {}
+
+  ngOnInit() {
+    this.apiService.getStores().subscribe({
+      next: (stores: any[]) => {
+        if (stores && stores.length > 0) {
+          const storeId = stores[0].id;
+          this.apiService.getStoreDashboard(storeId).subscribe({
+            next: (data: any) => {
+              this.monthlyData.labels = data.monthLabels;
+              this.monthlyData.datasets[0].data = data.monthValues;
+              this.monthlyData = { ...this.monthlyData };
+
+              this.months = [];
+              for(let i = 0; i < data.monthLabels.length; i++) {
+                 const rev = data.monthValues[i];
+                 const ords = data.monthOrdersValues[i];
+                 const avg = ords > 0 ? (rev / ords).toFixed(2) : 0;
+                 this.months.push({
+                   name: data.monthLabels[i],
+                   revenue: rev,
+                   orders: ords,
+                   avgOrder: avg
+                 });
+              }
+            },
+            error: (err: any) => console.error('Failed to load dashboard data', err)
+          });
+        }
+      },
+      error: (err: any) => console.error('Failed to load stores', err)
+    });
+
+    this.apiService.getOrders().subscribe({
+      next: (orders: any[]) => this.allOrders = orders,
+      error: (err: any) => console.error('Failed to load orders', err)
+    });
+  }
+
+  drillDown(monthStr: string) {
+    this.selectedMonth = monthStr;
+
+    // Filter orders by selected month (e.g., "Jan", "Feb")
+    const monthOrders = this.allOrders.filter(o => {
+      if (!o.createdAt) return false;
+      const d = new Date(o.createdAt);
+      const mLabel = d.toLocaleString('default', { month: 'short' });
+      return mLabel === monthStr;
+    });
+
+    // Determine max days in this month based on the first found order, or default to 31
+    let maxDays = 31;
+    if (monthOrders.length > 0) {
+      const d = new Date(monthOrders[0].createdAt);
+      maxDays = new Date(d.getFullYear(), d.getMonth() + 1, 0).getDate();
+    }
+
+    const dailyRev = new Array(maxDays).fill(0);
+    const dayLabels = Array.from({length: maxDays}, (_, i) => `${i + 1}`);
+
+    monthOrders.forEach(o => {
+      const d = new Date(o.createdAt);
+      const dayIdx = d.getDate() - 1;
+      dailyRev[dayIdx] += (o.grandTotal || 0);
+    });
+
+    this.dailyData.labels = dayLabels;
+    this.dailyData.datasets[0].data = dailyRev;
+    this.dailyData = { ...this.dailyData };
   }
 
   goBack() {

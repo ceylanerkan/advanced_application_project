@@ -30,16 +30,24 @@
             </div>
           </div>
         }
+        @if (isLoading) {
+          <div class="message-wrapper">
+            <div class="message-bubble">
+              <div class="message-text" style="color: var(--text-secondary); font-style: italic;">AI is thinking...</div>
+            </div>
+          </div>
+        }
       </div>
-      
+
       <div class="chat-input-area">
-        <input 
-          type="text" 
-          [(ngModel)]="userInput" 
+        <input
+          type="text"
+          [(ngModel)]="userInput"
           (keyup.enter)="sendMessage()"
-          placeholder="Ask a question about your data (try typing 'revenue')..." 
+          placeholder="Ask a question about your data..."
+          [disabled]="isLoading"
           class="chat-input">
-        <button class="btn btn-primary" (click)="sendMessage()">Send</button>
+        <button class="btn btn-primary" (click)="sendMessage()" [disabled]="isLoading">Send</button>
       </div>
     </div>
   </main>

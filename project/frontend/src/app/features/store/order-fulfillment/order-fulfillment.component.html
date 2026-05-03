@@ -34,7 +34,7 @@
           <td>{{ o.customer }}</td>
           <td>{{ o.items }}</td>
           <td>${{ o.total.toFixed(2) }}</td>
-          <td>{{ o.createdAt }}</td>
+          <td>{{ o.createdAt?.split('T')[0] || '-' }}</td>
           <td><span class="status-badge" [ngClass]="o.status.toLowerCase()">{{ o.status }}</span></td>
           <td>
             <button class="action-btn success" *ngIf="getNextStatus(o.status)" (click)="advanceStatus(o)">
