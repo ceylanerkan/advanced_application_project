@@ -55,22 +55,21 @@ public class StoreController {
         Double avgRatingDb = productRepository.getAverageRatingByStoreId(storeId);
         double avgRating = avgRatingDb != null ? avgRatingDb : 0.0;
 
-        // Weekly Orders
-        double[] weeklyOrders = new double[7];
+        // Weekly Revenue (current week, Mon–Sun)
+        double[] weeklyRevenue = new double[7];
         String[] weekLabels = new String[]{"Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"};
-        // Simplified: Just assigning some real order count to random days or real days if dates are proper
         for (Order o : orders) {
             if (o.getCreatedAt() != null) {
                 try {
                     LocalDate d = LocalDate.parse(o.getCreatedAt().substring(0, 10));
                     int day = d.getDayOfWeek().getValue() - 1; // 0=Mon, 6=Sun
-                    weeklyOrders[day]++;
+                    weeklyRevenue[day] += o.getGrandTotal() != null ? o.getGrandTotal() : 0.0;
                 } catch(Exception ignored){}
             }
         }
-        
+
         List<Double> weekValuesList = new ArrayList<>();
-        for(double d : weeklyOrders) weekValuesList.add(d);
+        for(double d : weeklyRevenue) weekValuesList.add(d);
 
         // Monthly Revenue and Orders
         double[] monthlyRevenue = new double[6];
@@ -90,7 +89,7 @@ public class StoreController {
                         return d.getMonthValue() == m && d.getYear() == y;
                     } catch(Exception e) { return false; }
                 })
-                .mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0)
+                .mapToDouble(o -> { Double gt = o.getGrandTotal(); return gt != null ? gt.doubleValue() : 0.0; })
                 .sum();
                 
             monthlyOrders[i] = orders.stream()
@@ -116,7 +115,9 @@ public class StoreController {
                 String catName = (item.getProduct() != null && item.getProduct().getCategory() != null) 
                     ? item.getProduct().getCategory().getName() 
                     : "Uncategorized";
-                double lineTotal = (item.getPrice() != null ? item.getPrice() : 0) * (item.getQuantity() != null ? item.getQuantity() : 0);
+                double itemPrice = item.getPrice() != null ? item.getPrice().doubleValue() : 0.0;
+                int itemQty = item.getQuantity() != null ? item.getQuantity() : 0;
+                double lineTotal = itemPrice * itemQty;
                 categoryTotals.put(catName, categoryTotals.getOrDefault(catName, 0.0) + lineTotal);
             }
         }
@@ -141,7 +142,9 @@ public class StoreController {
             stats.put("email", email);
             stats.put("city", city);
             stats.put("orders", (int)stats.getOrDefault("orders", 0) + 1);
-            stats.put("totalSpent", (double)stats.getOrDefault("totalSpent", 0.0) + (o.getGrandTotal() != null ? o.getGrandTotal() : 0.0));
+            double prevSpent = ((Number) stats.getOrDefault("totalSpent", 0.0)).doubleValue();
+            double orderTotal = o.getGrandTotal() != null ? o.getGrandTotal().doubleValue() : 0.0;
+            stats.put("totalSpent", prevSpent + orderTotal);
         }
 
         List<String> cityLabels = new ArrayList<>(cityTotals.keySet());
@@ -169,7 +172,7 @@ public class StoreController {
         response.put("totalRevenue", totalRevenue);
         response.put("totalOrders", totalOrders);
         response.put("activeProducts", activeProducts);
-        response.put("avgRating", String.format("%.1f", avgRating).replace(",", "."));
+        response.put("avgRating", Math.round(avgRating * 10.0) / 10.0);
 
         response.put("weekLabels", Arrays.asList(weekLabels));
         response.put("weekValues", weekValuesList);

@@ -11,7 +11,7 @@
         <tr *ngFor="let s of stores">
           <td>{{ s.id }}</td>
           <td><strong>{{ s.name }}</strong></td>
-          <td>{{ s.owner }}</td>
+          <td>{{ s.owner?.email }}</td>
           <td>{{ s.products }}</td>
           <td>${{ s.revenue.toLocaleString() }}</td>
           <td><span class="status-badge" [ngClass]="s.status.toLowerCase()">{{ s.status }}</span></td>

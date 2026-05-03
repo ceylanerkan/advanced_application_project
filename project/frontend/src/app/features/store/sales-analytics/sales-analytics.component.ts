@@ -13,8 +13,8 @@ import { ApiService } from '../../../core/services/api.service';
   styleUrls: []
 })
 export class SalesAnalyticsComponent {
-  dateFrom = '2026-01-01';
-  dateTo = '2026-04-30';
+  dateFrom = new Date(new Date().getFullYear(), 0, 1).toISOString().split('T')[0];
+  dateTo = new Date().toISOString().split('T')[0];
 
   chartOptions: ChartOptions = {
     responsive: true,
@@ -22,7 +22,7 @@ export class SalesAnalyticsComponent {
     plugins: { legend: { labels: { color: '#f8fafc' } } },
     scales: {
       x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
-      y: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+      y: { min: 0, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
     }
   };
 
@@ -60,8 +60,7 @@ export class SalesAnalyticsComponent {
     to.setHours(23, 59, 59, 999);
 
     const filtered = this.allOrders.filter(o => {
-      if (!o.createdAt) return false;
-      const d = new Date(o.createdAt);
+      const d = o.createdAt ? new Date(o.createdAt) : new Date();
       return d >= from && d <= to;
     });
 
@@ -72,7 +71,7 @@ export class SalesAnalyticsComponent {
     // 1. Calculate Monthly Revenue & Orders (salesData)
     const monthMap = new Map<string, { rev: number, ord: number }>();
     orders.forEach(o => {
-      const d = new Date(o.createdAt);
+      const d = o.createdAt ? new Date(o.createdAt) : new Date();
       const label = d.toLocaleString('default', { month: 'short', year: 'numeric' });
       if (!monthMap.has(label)) monthMap.set(label, { rev: 0, ord: 0 });
       const stats = monthMap.get(label)!;
@@ -94,7 +93,7 @@ export class SalesAnalyticsComponent {
     days.forEach(d => weekMap.set(d, 0));
     
     orders.forEach(o => {
-      const d = new Date(o.createdAt);
+      const d = o.createdAt ? new Date(o.createdAt) : new Date();
       const dayLabel = days[d.getDay()];
       weekMap.set(dayLabel, weekMap.get(dayLabel)! + 1);
     });

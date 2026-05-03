@@ -14,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 import com.ecommerce.exception.ResourceNotFoundException; 
 import com.ecommerce.model.Order;
 import com.ecommerce.model.User;
+import com.ecommerce.repository.OrderItemRepository;
 import com.ecommerce.repository.OrderRepository;
 import com.ecommerce.repository.StoreRepository;
 import com.ecommerce.model.Store;
@@ -26,8 +27,22 @@ import lombok.RequiredArgsConstructor;
 public class OrderService {
 
     private final OrderRepository orderRepository;
+    private final OrderItemRepository orderItemRepository;
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
+
+    private void populateItemCounts(List<Order> orders) {
+        for (Order order : orders) {
+            List<com.ecommerce.model.OrderItem> items = orderItemRepository.findByOrder_Id(order.getId());
+            order.setItemCount(items.size());
+            if (!items.isEmpty()) {
+                String first = items.get(0).getProduct() != null ? items.get(0).getProduct().getName() : "Item";
+                order.setItemSummary(items.size() > 1 ? first + " +" + (items.size() - 1) + " more" : first);
+            } else {
+                order.setItemSummary("—");
+            }
+        }
+    }
 
     // Helper method to fetch the current user via email
     private User getAuthenticatedUser(String email) {
@@ -39,8 +54,9 @@ public class OrderService {
         User currentUser = getAuthenticatedUser(email);
         PageRequest pageRequest = PageRequest.of(page, size);
 
+        Page<Order> result;
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
-            return orderRepository.findAll(pageRequest);
+            result = orderRepository.findAll(pageRequest);
         } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
             List<Store> stores = storeRepository.findByOwner_Id(currentUser.getId());
             List<Order> all = new java.util.ArrayList<>();
@@ -50,28 +66,31 @@ public class OrderService {
             int start = (int) pageRequest.getOffset();
             int end = Math.min(start + pageRequest.getPageSize(), all.size());
             List<Order> slice = start >= all.size() ? new java.util.ArrayList<>() : all.subList(start, end);
-            return new PageImpl<>(slice, pageRequest, all.size());
+            result = new PageImpl<>(slice, pageRequest, all.size());
         } else {
-            return orderRepository.findByUser_Email(currentUser.getEmail(), pageRequest);
+            result = orderRepository.findByUser_Email(currentUser.getEmail(), pageRequest);
         }
+        populateItemCounts(result.getContent());
+        return result;
     }
 
     public List<Order> getAllOrders(String email) {
         User currentUser = getAuthenticatedUser(email);
 
+        List<Order> orders;
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
-            return orderRepository.findAll();
+            orders = orderRepository.findAll();
         } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
             List<Store> stores = storeRepository.findByOwner_Id(currentUser.getId());
-            List<Order> corporateOrders = new java.util.ArrayList<>();
+            orders = new java.util.ArrayList<>();
             for (Store s : stores) {
-                corporateOrders.addAll(orderRepository.findByStoreId(s.getId()));
+                orders.addAll(orderRepository.findByStoreId(s.getId()));
             }
-            return corporateOrders;
         } else {
-            // INDIVIDUAL user
-            return orderRepository.findByUser_Email(currentUser.getEmail());
+            orders = orderRepository.findByUser_Email(currentUser.getEmail());
         }
+        populateItemCounts(orders);
+        return orders;
     }
 
     public Order getOrderById(Long id, String email) {
@@ -112,12 +131,13 @@ public class OrderService {
         Order order = getOrderById(id, email);
         User currentUser = getAuthenticatedUser(email);
 
-        // Apply safe updates
+        // Apply safe updates — only overwrite non-null incoming values so that
+        // partial updates (e.g. status-only from order fulfillment) don't wipe existing data.
         order.setStatus(orderDetails.getStatus());
-        order.setGrandTotal(orderDetails.getGrandTotal());
-        order.setBaseCurrency(orderDetails.getBaseCurrency());
-        order.setOriginalCurrency(orderDetails.getOriginalCurrency());
-        order.setExchangeRate(orderDetails.getExchangeRate());
+        if (orderDetails.getGrandTotal() != null) order.setGrandTotal(orderDetails.getGrandTotal());
+        if (orderDetails.getBaseCurrency() != null) order.setBaseCurrency(orderDetails.getBaseCurrency());
+        if (orderDetails.getOriginalCurrency() != null) order.setOriginalCurrency(orderDetails.getOriginalCurrency());
+        if (orderDetails.getExchangeRate() != null) order.setExchangeRate(orderDetails.getExchangeRate());
         // createdAt is intentionally not updated — preserve original timestamp
         
         // Security Check: Only Admins can reassign an order to a different user or store

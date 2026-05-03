@@ -2,8 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ApiService } from '../../../core/services/api.service';
-import { AuthService } from '../../../core/services/auth.service';
-
 @Component({
   selector: 'app-product-management',
   standalone: true,
@@ -14,19 +12,25 @@ import { AuthService } from '../../../core/services/auth.service';
 export class ProductManagementComponent implements OnInit {
   products: any[] = [];
   categories: any[] = [];
+  storeId: number | null = null;
   showModal = false;
   editMode = false;
   currentProduct: any = { name: '', sku: '', unitPrice: 0, categoryId: null, stock: 0 };
 
-  constructor(private apiService: ApiService, private authService: AuthService) {}
+  constructor(private apiService: ApiService) {}
 
   ngOnInit() {
+    this.apiService.getStores().subscribe({
+      next: (stores) => {
+        if (stores.length > 0) this.storeId = stores[0].id;
+      }
+    });
     this.loadProducts();
     this.apiService.getCategories().subscribe(cats => this.categories = cats);
   }
 
   loadProducts() {
-    this.apiService.getProducts().subscribe({
+    this.apiService.getMyProducts().subscribe({
       next: (data) => {
         // Assume corporate user only sees their products (backend usually handles this filter via token)
         this.products = data.map(p => ({
@@ -53,14 +57,22 @@ export class ProductManagementComponent implements OnInit {
     this.showModal = true;
   }
 
+  get hasNoStore(): boolean {
+    return this.storeId === null;
+  }
+
   save() {
+    if (!this.storeId) {
+      this.showModal = false;
+      return;
+    }
     const payload = {
       name: this.currentProduct.name,
       sku: this.currentProduct.sku,
       unitPrice: this.currentProduct.unitPrice,
       baseCurrency: 'USD',
-      category: { id: this.currentProduct.categoryId },
-      store: { id: 1 }, // Would ideally use the corporate user's actual store_id
+      category: { id: Number(this.currentProduct.categoryId) },
+      store: { id: this.storeId },
       stock: this.currentProduct.stock
     };
 
@@ -70,7 +82,7 @@ export class ProductManagementComponent implements OnInit {
           this.loadProducts();
           this.showModal = false;
         },
-        error: (err) => alert('Failed to update product')
+        error: () => alert('Failed to update product')
       });
     } else {
       this.apiService.createProduct(payload).subscribe({
@@ -78,7 +90,7 @@ export class ProductManagementComponent implements OnInit {
           this.loadProducts();
           this.showModal = false;
         },
-        error: (err) => alert('Failed to create product')
+        error: () => alert('Failed to create product')
       });
     }
   }
@@ -87,7 +99,7 @@ export class ProductManagementComponent implements OnInit {
     if (confirm('Are you sure you want to delete this product?')) {
       this.apiService.deleteProduct(id).subscribe({
         next: () => this.loadProducts(),
-        error: (err) => alert('Failed to delete product')
+        error: () => alert('Failed to delete product')
       });
     }
   }

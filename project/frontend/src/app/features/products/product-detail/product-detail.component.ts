@@ -77,6 +77,10 @@ export class ProductDetailComponent implements OnInit {
         this.reviews.unshift(savedReview);
         this.newComment = '';
         this.newRating = 5;
+        // Reload product so the updated averageRating is reflected immediately
+        this.apiService.getProduct(this.product.id).subscribe(p => {
+          this.product.rating = p.averageRating || 0;
+        });
         alert('Review submitted!');
       },
       error: (err) => {

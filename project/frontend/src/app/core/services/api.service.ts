@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 
@@ -25,6 +25,10 @@ export class ApiService {
 
   getProductsPaged(page = 0, size = 20): Observable<any> {
     return this.http.get<any>(`${this.base}/products?page=${page}&size=${size}`);
+  }
+
+  getMyProducts(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/products/mine`);
   }
 
   getProduct(id: number): Observable<any> {
@@ -119,6 +123,10 @@ export class ApiService {
   // ── Reviews ──
   getReviews(): Observable<any[]> {
     return this.http.get<any[]>(`${this.base}/reviews`);
+  }
+
+  getMyStoreReviews(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.base}/reviews/my-store`);
   }
 
   createReview(review: any): Observable<any> {

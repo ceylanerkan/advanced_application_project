@@ -22,6 +22,16 @@ export class StoreComparisonComponent {
     }
   };
 
+  ratingChartOptions: ChartOptions = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: { legend: { labels: { color: '#f8fafc' } } },
+    scales: {
+      x: { ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+      y: { min: 0, max: 5, ticks: { color: '#94a3b8' }, grid: { color: 'rgba(255,255,255,0.05)' } }
+    }
+  };
+
   revenueCompare: ChartConfiguration<'bar'>['data'] = {
     labels: [],
     datasets: [

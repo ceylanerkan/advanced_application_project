@@ -52,8 +52,23 @@ export class OrderHistoryComponent implements OnInit {
     this.filteredOrders = result;
   }
 
+  jumpPage = 1;
+
   prevPage() { if (this.currentPage > 0) this.loadPage(this.currentPage - 1); }
   nextPage() { if (this.currentPage < this.totalPages - 1) this.loadPage(this.currentPage + 1); }
+
+  goToPage(page: number) {
+    const p = Math.max(0, Math.min(Math.floor(page), this.totalPages - 1));
+    if (p !== this.currentPage) this.loadPage(p);
+  }
+
+  getPageRange(): number[] {
+    const total = this.totalPages;
+    if (total <= 7) return Array.from({ length: total }, (_, i) => i);
+    const cur = this.currentPage;
+    const start = Math.max(0, Math.min(cur - 2, total - 5));
+    return Array.from({ length: 5 }, (_, i) => start + i);
+  }
 
   trackOrder(orderId: number) {
     this.router.navigate(['/tracking', orderId]);

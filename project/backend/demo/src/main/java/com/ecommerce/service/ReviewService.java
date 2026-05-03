@@ -3,6 +3,7 @@ package com.ecommerce.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -25,8 +26,26 @@ public class ReviewService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
 
+    @PostConstruct
+    public void backfillProductRatings() {
+        List<Product> products = productRepository.findAll();
+        for (Product product : products) {
+            Double avg = reviewRepository.getAverageRatingByProductId(product.getId());
+            product.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : null);
+        }
+        productRepository.saveAll(products);
+    }
+
     public List<Review> getAllReviews() {
         return reviewRepository.findAll();
+    }
+
+    public List<Review> getReviewsForMyStore(String email) {
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
+        if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            return reviewRepository.findAll();
+        }
+        return reviewRepository.findByProductStoreOwnerId(currentUser.getId());
     }
 
     public Review getReviewById(Long id) {
@@ -47,7 +66,9 @@ public class ReviewService {
 
         review.setCreatedAt(LocalDateTime.now().toString());
 
-        return reviewRepository.save(review);
+        Review saved = reviewRepository.save(review);
+        recalculateProductRating(product);
+        return saved;
     }
 
     public Review updateReview(Long id, Review reviewDetails, String email) {
@@ -63,8 +84,10 @@ public class ReviewService {
         review.setSentiment(reviewDetails.getSentiment());
         review.setProduct(reviewDetails.getProduct());
         // createdAt is intentionally not updated — preserve original timestamp
-        
-        return reviewRepository.save(review);
+
+        Review saved = reviewRepository.save(review);
+        recalculateProductRating(review.getProduct());
+        return saved;
     }
 
     public void deleteReview(Long id, String email) {
@@ -74,6 +97,14 @@ public class ReviewService {
         if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType()) && !review.getUser().getId().equals(currentUser.getId())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You can only delete your own reviews");
         }
+        Product product = review.getProduct();
         reviewRepository.delete(review);
+        recalculateProductRating(product);
+    }
+
+    private void recalculateProductRating(Product product) {
+        Double avg = reviewRepository.getAverageRatingByProductId(product.getId());
+        product.setAverageRating(avg != null ? Math.round(avg * 10.0) / 10.0 : null);
+        productRepository.save(product);
     }
 }

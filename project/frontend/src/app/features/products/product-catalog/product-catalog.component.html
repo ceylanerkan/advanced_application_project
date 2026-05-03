@@ -40,9 +40,15 @@
     <p>Try adjusting your search or filters.</p>
   </div>
 
-  <div *ngIf="!isLoading && totalPages > 1" class="glass-panel" style="display:flex; align-items:center; justify-content:center; gap:1rem; padding:1rem; margin-top:1rem;">
+  <div *ngIf="!isLoading && totalPages > 1" class="glass-panel" style="display:flex; align-items:center; justify-content:center; gap:0.5rem; padding:1rem; margin-top:1rem; flex-wrap:wrap;">
     <button class="btn btn-outline" (click)="prevPage()" [disabled]="currentPage === 0">← Prev</button>
-    <span style="color: var(--text-secondary)">Page {{ currentPage + 1 }} of {{ totalPages }} &nbsp;({{ totalElements }} products)</span>
+    <button *ngFor="let p of getPageRange()"
+      class="btn" [class.btn-primary]="p === currentPage" [class.btn-outline]="p !== currentPage"
+      (click)="goToPage(p)">{{ p + 1 }}</button>
     <button class="btn btn-outline" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">Next →</button>
+    <span style="color:var(--text-secondary); font-size:0.8rem; margin:0 0.25rem;">{{ currentPage + 1 }}/{{ totalPages }} ({{ totalElements }})</span>
+    <input type="number" [(ngModel)]="jumpPage" min="1" [max]="totalPages" (keyup.enter)="goToPage(jumpPage - 1)"
+      style="width:60px; padding:0.4rem; border-radius:0.5rem; background:#1e293b; color:#f8fafc; border:1px solid #334155; text-align:center;">
+    <button class="btn btn-outline" (click)="goToPage(jumpPage - 1)">Go</button>
   </div>
 </div>
