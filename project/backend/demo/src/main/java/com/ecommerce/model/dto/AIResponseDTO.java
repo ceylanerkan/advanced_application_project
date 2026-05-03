@@ -1,13 +1,18 @@
 package com.ecommerce.model.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class AIResponseDTO {
 
-    @JsonAlias("final_answer")
+// Forces Java to output "finalAnswer" to Angular, 
+    // but accepts BOTH "final_answer" and "finalAnswer" from Python
+    @JsonProperty("finalAnswer")
+    @JsonAlias({"final_answer", "finalAnswer"})
     private String finalAnswer;
 
-    @JsonAlias("visualization_code")
+    @JsonProperty("visualizationCode")
+    @JsonAlias({"visualization_code", "visualizationCode"})
     private String visualizationCode;
 
     private String status;

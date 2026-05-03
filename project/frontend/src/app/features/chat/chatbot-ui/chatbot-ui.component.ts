@@ -8,7 +8,7 @@ import * as PlotlyJS from 'plotly.js-dist-min';
 import { AuthService } from '../../../core/services/auth.service';
 import { ApiService } from '../../../core/services/api.service';
 
-PlotlyService.setPlotly(PlotlyJS);
+PlotlyModule.plotlyjs = PlotlyJS;
 
 interface ChatMessage {
   id: number;

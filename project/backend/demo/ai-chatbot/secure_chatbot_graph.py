@@ -1,223 +1,205 @@
 import json
+import re
 from typing import TypedDict, Optional, Union, Dict, Any
 from langgraph.graph import StateGraph, END
 from sqlalchemy import create_engine, text
-from sqlalchemy.exc import SQLAlchemyError
 
-# Import the 5 hardened agents we defined earlier
 from agents import (
-    guardrails_agent,
-    sql_agent,
-    analysis_agent,
-    visualization_agent,
-    error_agent
+    guardrails_agent, sql_agent, analysis_agent, 
+    visualization_agent, error_agent,translator_agent
 )
 
-# ==========================================
-# 0. Database Configuration
-# ==========================================
-# ⚠️ REPLACE THIS STRING with your actual database credentials!
-# Format: dialect+driver://username:password@host:port/database
-# MySQL Example: "mysql+pymysql://root:password123@localhost:3306/ecommerce_db"
-# PostgreSQL Example: "postgresql://postgres:password123@localhost:5432/ecommerce_db"
-DB_URI = "mysql+pymysql://root:admin@localhost:3306/ecommerce_db" 
+# --- 0. Database Configuration ---
+DB_URI = "mysql+pymysql://root:admin@localhost:3306/advanced_project" 
 engine = create_engine(DB_URI)
 
-# ==========================================
-# 1. State Management
-# ==========================================
 class AgentState(TypedDict):
     question: str
+    english_question: str
     sql_query: Optional[str]
     query_result: Optional[Union[str, Dict[str, Any]]]
     error: Optional[str]
     final_answer: Optional[str]
     visualization_code: Optional[str]
     is_in_scope: bool
+    message_type: str 
     iteration_count: int
     current_user_id: int
     current_user_role: str
 
-# ==========================================
-# 2. Node Functions
-# ==========================================
+# --- 2. Node Functions ---
 
+# In secure_chatbot_graph.py
+
+# In secure_chatbot_graph.py
 def guardrails_node(state: AgentState):
-    """Checks if the question is in scope and secure."""
+    # 1. Translate
+    translation_response = translator_agent.invoke({"input": state['question']})
+    english_q = translation_response.content.strip()
     
-    # Using strict delimiters to prevent False Positives (AV-01 protection)
-    prompt_input = f"""
-    [TRUSTED SYSTEM METADATA]
-    Authenticated User ID: {state['current_user_id']}
-    Authenticated Role: {state['current_user_role']}
-
-    [UNTRUSTED USER QUESTION]
-    Question: {state['question']}
-    """
+    print(f"\n[DEBUG] ORIGINAL TURKISH: {state['question']}")
+    print(f"[DEBUG] TRANSLATED ENGLISH: {english_q}")
+    
+    # 2. Guardrails
+    prompt_input = f"User Role: {state['current_user_role']}\nQuestion: {english_q}"
     response = guardrails_agent.invoke({"input": prompt_input})
+    res = response.content.upper()
     
-    # We use a simple heuristic to determine rejection. 
-    response_text = response.content.lower()
-    is_rejected = "reject" in response_text or "out-of-scope" in response_text or "out of scope" in response_text or "violation" in response_text
+    print(f"[DEBUG] GUARDRAIL DECISION: {res}\n")
     
-    if is_rejected:
-        return {"is_in_scope": False, "final_answer": response.content}
-    else:
-        return {"is_in_scope": True}
-
+    # 3. Route
+    if "[REJECT]" in res:
+        rejection_message = response.content.replace("[REJECT]", "").strip()
+        return {"is_in_scope": False, "final_answer": rejection_message, "message_type": "REJECT", "english_question": english_q}
+    if "[GREETING]" in res:
+        return {"is_in_scope": True, "message_type": "GREETING", "english_question": english_q}
+    
+    return {"is_in_scope": True, "message_type": "DATA_QUERY", "english_question": english_q}
+# In secure_chatbot_graph.py
 def sql_node(state: AgentState):
-    """Generates or fixes SQL based on the error state."""
-    prompt_input = f"User ID: {state['current_user_id']}, Role: {state['current_user_role']}\nQuestion: {state['question']}"
+    # Use the english_question here
+    prompt_input = f"User: {state['current_user_id']} ({state['current_user_role']})\nQ: {state['english_question']}"
     
-    iteration_count = state.get("iteration_count", 0)
-    
-    # If there is an error, route to the Error Recovery Agent
     if state.get("error"):
-        prompt_input += f"\nPrevious Error: {state['error']}\nPrevious Query: {state['sql_query']}\nPlease fix this query."
+        prompt_input += f"\nFix this syntax error: {state['error']}\nPrevious SQL: {state['sql_query']}"
         response = error_agent.invoke({"input": prompt_input})
     else:
-        # Otherwise use the standard SQL Agent
         response = sql_agent.invoke({"input": prompt_input})
     
-    # Clean up any potential markdown formatting from the LLM output
-    sql_query = response.content.replace('```sql', '').replace('```', '').strip()
-    return {"sql_query": sql_query, "iteration_count": iteration_count + 1}
+    content = response.content.strip()
+    match = re.search(r'```sql\s*(.*?)\s*```', content, re.DOTALL | re.IGNORECASE)
+    
+    if match:
+        sql = match.group(1).strip()
+    else:
+        sql = content.replace('```sql', '').replace('```', '').strip()
+        
+    return {"sql_query": sql, "iteration_count": state.get("iteration_count", 0) + 1}
 
 def execute_sql_node(state: AgentState):
-    """Executes the generated SQL query against the real database."""
     sql = state.get("sql_query", "")
+    role = state.get("current_user_role", "USER")
+    user_id = str(state.get("current_user_id"))
     
-    # 1. Enforce strict Read-Only constraints (Crucial for Security!)
-    upper_sql = sql.upper()
-    if any(forbidden in upper_sql for forbidden in ["DROP ", "UPDATE ", "DELETE ", "INSERT ", "ALTER ", "TRUNCATE "]):
-        return {"error": "Unauthorized SQL command detected. Only SELECT is allowed.", "query_result": None}
+    print(f"\n[DEBUG] EXECUTING SQL: {sql}\n")
     
-    # 2. Enforce SELECT * ban (AV-12 requirement)
-    if "SELECT *" in upper_sql:
-        return {"error": "SELECT * is forbidden. Explicitly name columns.", "query_result": None}
+    # 1. [AV-03 & AV-11] Prevent SQL Injection and Mass Assignment Write Operations
+    forbidden = r"\b(DROP|DELETE|UPDATE|INSERT|ALTER|TRUNCATE|GRANT|REVOKE)\b"
+    if re.search(forbidden, sql.upper()):
+        print("[DEBUG] SECURITY BLOCK: Unauthorized DML/DDL command.")
+        return {"error": "Security Violation: Only SELECT commands are allowed.", "query_result": None}
+        
+    # 2. [AV-12] Prevent SELECT * Exfiltration and Sensitive Columns Exposure
+    sensitive_columns = r"\b(password_hash|internal_cost|supplier_margin|api_key)\b"
+    if "*" in sql or re.search(sensitive_columns, sql.lower()):
+        print("[DEBUG] SECURITY BLOCK: Sensitive column or SELECT * detected.")
+        return {"error": "Security Violation: Broad column selection or sensitive data exposure is prohibited.", "query_result": None}
+        
+    # 3. [AV-01, AV-02, AV-05, AV-10] DETERMINISTIC SECURITY CHECK (BOLA & Cross-Tenant)
+    # If the user is NOT an admin, their user_id MUST appear in the SQL in a meaningful context
+    # (e.g. after = or inside IN(...)) to prevent cross-tenant data leaks.
+    if role != "ADMIN":
+        # Match patterns like: = 5, =5, IN(5, ...), IN (5, ...)
+        user_id_in_context = re.search(
+            r'=\s*' + re.escape(user_id) + r'\b|IN\s*\([^)]*\b' + re.escape(user_id) + r'\b',
+            sql,
+            re.IGNORECASE
+        )
+        if not user_id_in_context:
+            print("[DEBUG] DETERMINISTIC BLOCK: User ID not found in SQL WHERE/IN context.")
+            return {
+                "error": "Security Violation: Insufficient privileges. You can only view your own data.",
+                "query_result": None
+            }
     
-    # 3. Execute the query against the real database
-    try:
-        with engine.connect() as connection:
-            result = connection.execute(text(sql))
-            # Fetch all rows and convert them to a list of dictionaries
+    try: 
+        with engine.connect() as conn:
+            result = conn.execute(text(sql))
             rows = [dict(row._mapping) for row in result]
-            
-            # Helper to convert dates/decimals to strings for JSON serialization
-            def custom_serializer(obj):
-                if hasattr(obj, 'isoformat'):
-                    return obj.isoformat()
-                return str(obj)
-
-            json_result = json.dumps(rows, default=custom_serializer)
-            return {"query_result": json_result, "error": None}
-            
-    except SQLAlchemyError as e:
-        # Capture the database error so the Error Agent can fix it!
-        error_msg = str(e.__dict__.get('orig', e))
-        return {"error": error_msg, "query_result": None}
+            return {"query_result": json.dumps(rows, default=str), "error": None}
     except Exception as e:
         return {"error": str(e), "query_result": None}
-
+    
 def analysis_node(state: AgentState):
-    """Explains the query results in natural language."""
-    # If we failed 3 times and still have an error, the Analysis Node can explain the failure
-    if state.get("error"):
-        prompt_input = f"Question: {state['question']}\nWe failed to execute the SQL query successfully after 3 attempts. Error: {state['error']}\nExplain this failure."
+    error = state.get("error")
+    
+    # If a security violation occurred, output the exact hardcoded English error directly.
+    # Do not let the analysis_agent try to "explain" it.
+    if error and "Security Violation" in error:
+        return {"final_answer": error}
+
+    # Otherwise, handle normal analysis
+    if state.get("message_type") == "GREETING":
+        prompt_input = f"Greet the user in their language: {state['question']}"
+    elif error:
+        prompt_input = f"Explain this syntax error in the user's language: {error}"
     else:
-        prompt_input = f"Question: {state['question']}\nQuery Result: {state['query_result']}"
+        prompt_input = f"Data: {state['query_result']}\nAnswer this question in its original language: {state['question']}"
         
     response = analysis_agent.invoke({"input": prompt_input})
     return {"final_answer": response.content}
 
 def visualization_node(state: AgentState):
-    """Generates JSON configuration for Plotly if a chart is requested."""
-    prompt_input = f"Question: {state['question']}\nQuery Result: {state['query_result']}"
+    prompt_input = f"Data: {state['query_result']}\nUser Request: {state['question']}\nGenerate ONLY valid Plotly JSON."
     response = visualization_agent.invoke({"input": prompt_input})
     
-    # Clean markdown to extract just the JSON (Fixed string literal)
-    viz_code = response.content.replace('```json', '').replace('```', '').strip()
+    # Extract JSON cleanly in case the LLM wraps it in markdown blocks
+    content = response.content.strip()
+    match = re.search(r'```json\s*(.*?)\s*```', content, re.DOTALL | re.IGNORECASE)
+    json_code = match.group(1).strip() if match else content.replace('```json', '').replace('```', '').strip()
     
-    return {"visualization_code": viz_code}
+    return {
+        "visualization_code": json_code, 
+        "final_answer": "İşte verilerinizin grafiği:" # Short text to accompany the chart
+    }
 
-# ==========================================
-# 3. Graph Execution Flow (Routing Edges)
-# ==========================================
-
+# --- 3. Routing & Graph ---
 def check_scope(state: AgentState):
-    """Determine whether to proceed to SQL generation or end the graph."""
-    if state.get("is_in_scope"):
-        return "sql_node"
-    return END
+    if not state.get("is_in_scope"): return END
+    return "analysis_node" if state.get("message_type") == "GREETING" else "sql_node"
 
 def check_sql_execution(state: AgentState):
-    """Determine whether to retry SQL generation or proceed to analysis."""
-    if state.get("error"):
-        # Max 3 retries
-        if state.get("iteration_count", 0) >= 3:
+    error = state.get("error")
+    if error:
+        if "Security Violation" in error:
             return "analysis_node"
-        return "sql_node"
+        if state.get("iteration_count", 0) < 3:
+            return "sql_node"
+        return "analysis_node"
+    
+    # If no error, check for visualization intent
+    question = state.get("english_question", "").lower()
+    
+    # Expanded keywords for better intent detection
+    visualization_keywords = [
+        "graph", "chart", "plot", "visualize", 
+        "categorize", "distribution", "breakdown", "split"
+    ]
+    
+    if any(word in question for word in visualization_keywords):
+        return "visualization_node"
+        
     return "analysis_node"
 
-def check_visualization_needed(state: AgentState):
-    """Determine if a graph is needed based on the user's question."""
-    question = state.get("question", "").lower()
-    
-    # Simple heuristic to determine if user asked for a chart
-    if any(keyword in question for keyword in ["chart", "graph", "plot", "visualize"]):
-        return "visualization_node"
-    return END
-
-# ==========================================
-# 4. Build and Compile the LangGraph
-# ==========================================
 workflow = StateGraph(AgentState)
-
-# Add all nodes
 workflow.add_node("guardrails_node", guardrails_node)
 workflow.add_node("sql_node", sql_node)
 workflow.add_node("execute_sql_node", execute_sql_node)
 workflow.add_node("analysis_node", analysis_node)
-workflow.add_node("visualization_node", visualization_node)
+workflow.add_node("visualization_node", visualization_node) # ADD THIS
 
-# Set the entry point
 workflow.set_entry_point("guardrails_node")
-
-# Edge: Guardrails -> (SQL Node OR End)
-workflow.add_conditional_edges(
-    "guardrails_node",
-    check_scope,
-    {
-        "sql_node": "sql_node",
-        END: END
-    }
-)
-
-# Edge: SQL Node -> Execute SQL Node
+workflow.add_conditional_edges("guardrails_node", check_scope, {"sql_node": "sql_node", "analysis_node": "analysis_node", END: END})
 workflow.add_edge("sql_node", "execute_sql_node")
 
-# Edge: Execute SQL Node -> (Retry SQL Node OR Analysis Node)
+# UPDATE THIS CONDITIONAL EDGE
 workflow.add_conditional_edges(
-    "execute_sql_node",
-    check_sql_execution,
-    {
-        "sql_node": "sql_node",             # Goes back to sql_node which triggers Error Agent if error state exists
-        "analysis_node": "analysis_node"    # Proceeds to analysis if successful or max retries hit
-    }
+    "execute_sql_node", 
+    check_sql_execution, 
+    {"sql_node": "sql_node", "analysis_node": "analysis_node", "visualization_node": "visualization_node"}
 )
 
-# Edge: Analysis Node -> (Visualization Node OR End)
-workflow.add_conditional_edges(
-    "analysis_node",
-    check_visualization_needed,
-    {
-        "visualization_node": "visualization_node",
-        END: END
-    }
-)
+workflow.add_edge("analysis_node", END)
+workflow.add_edge("visualization_node", END) # ADD THIS
 
-# Edge: Visualization Node -> End
-workflow.add_edge("visualization_node", END)
-
-# Compile the secure chatbot graph
 secure_chatbot_app = workflow.compile()
