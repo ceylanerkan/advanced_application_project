@@ -20,7 +20,7 @@ from agents import (
 # Format: dialect+driver://username:password@host:port/database
 # MySQL Example: "mysql+pymysql://root:password123@localhost:3306/ecommerce_db"
 # PostgreSQL Example: "postgresql://postgres:password123@localhost:5432/ecommerce_db"
-DB_URI = "mysql+pymysql://root:admin@localhost:3306/advanced_project" 
+DB_URI = "mysql+pymysql://root:admin@localhost:3306/ecommerce_db" 
 engine = create_engine(DB_URI)
 
 # ==========================================

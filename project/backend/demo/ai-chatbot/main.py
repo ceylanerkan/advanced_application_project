@@ -48,7 +48,7 @@ app = FastAPI(
 # 3. API Endpoints
 # ==========================================
 
-@app.post("/api/ai/invoke", response_model=AIResponsePayload)
+@app.post("/api/chat", response_model=AIResponsePayload)
 async def invoke_agent(payload: AIRequestPayload):
     """
     Receives user context and query from Spring Boot, runs the LangGraph, 

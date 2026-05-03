@@ -1,8 +1,15 @@
 package com.ecommerce.model.dto;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
+
 public class AIResponseDTO {
+
+    @JsonAlias("final_answer")
     private String finalAnswer;
+
+    @JsonAlias("visualization_code")
     private String visualizationCode;
+
     private String status;
     private String error;
 
