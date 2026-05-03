@@ -1,9 +1,20 @@
+import os
+from dotenv import load_dotenv
 from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 
+# 1. Force load the .env file right here
+load_dotenv()
+
+# 2. Grab the key manually
+groq_api_key = os.getenv("GROQ_API_KEY")
 # Initialize the LLM
 # We use Meta's Llama 3 70B model via Groq, which is excellent for strict logic and SQL.
-llm = ChatGroq(model="llama3-70b-8192", temperature=0)
+llm = ChatGroq(
+    api_key=groq_api_key,
+    model="llama-3.3-70b-versatile", 
+    temperature=0
+)
 
 def create_agent(system_prompt: str):
     """Helper function to create an agent chain with a specific system prompt."""
