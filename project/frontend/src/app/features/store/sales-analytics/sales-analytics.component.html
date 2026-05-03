@@ -6,10 +6,10 @@
 
   <div class="toolbar glass-panel">
     <label style="color: var(--text-secondary); font-size: 0.85rem;">From</label>
-    <input type="date" [value]="dateFrom" style="max-width: 180px;">
+    <input type="date" [(ngModel)]="dateFrom" style="max-width: 180px;">
     <label style="color: var(--text-secondary); font-size: 0.85rem;">To</label>
-    <input type="date" [value]="dateTo" style="max-width: 180px;">
-    <button class="btn btn-primary">Apply</button>
+    <input type="date" [(ngModel)]="dateTo" style="max-width: 180px;">
+    <button class="btn btn-primary" (click)="applyFilters()">Apply</button>
   </div>
 
   <div class="charts-grid grid grid-cols-2">

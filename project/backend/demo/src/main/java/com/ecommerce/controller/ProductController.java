@@ -2,6 +2,8 @@ package com.ecommerce.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,9 +27,15 @@ public class ProductController {
 
     private final ProductService productService;
 
-    @Operation(summary = "Get all products", description = "Retrieves a complete list of all products. Open to all users.")
+    @Operation(summary = "Get all products", description = "Retrieves products. Add ?page=0&size=20 for paginated results.")
     @GetMapping
-    public ResponseEntity<List<Product>> getAllProducts() {
+    public ResponseEntity<?> getAllProducts(
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null && size != null) {
+            Page<Product> result = productService.getProductsPaged(page, size);
+            return ResponseEntity.ok(result);
+        }
         return ResponseEntity.ok(productService.getAllProducts());
     }
 

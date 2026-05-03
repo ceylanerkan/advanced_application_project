@@ -27,7 +27,7 @@ export class CategoryManagementComponent implements OnInit {
       next: (data) => {
         this.categories = data.map(c => ({
           ...c,
-          productCount: c.productCount || Math.floor(Math.random() * 50)
+          productCount: c.productCount || 0
         }));
       },
       error: (err) => console.error('Failed to load categories', err)

@@ -14,15 +14,22 @@ import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import com.ecommerce.repository.ProductRepository;
+
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     public List<Category> getAllCategories() {
-        return categoryRepository.findAll();
+        List<Category> categories = categoryRepository.findAll();
+        for (Category c : categories) {
+            c.setProductCount(productRepository.countByCategoryId(c.getId()));
+        }
+        return categories;
     }
 
     public Category getCategoryById(Long id) {

@@ -14,24 +14,41 @@ import com.ecommerce.repository.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import com.ecommerce.repository.ProductRepository;
+import com.ecommerce.repository.OrderRepository;
+import com.ecommerce.model.Order;
+
 @Service
 @RequiredArgsConstructor
 public class StoreService {
 
     private final StoreRepository storeRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
+    private final OrderRepository orderRepository;
 
     public List<Store> getAllStores(String email) {
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "User not found"));
 
+        List<Store> stores;
         if ("ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
-            return storeRepository.findAll();
+            stores = storeRepository.findAll();
         } else if ("CORPORATE".equalsIgnoreCase(currentUser.getRoleType())) {
             // Corporate users can only see their own stores
-            return storeRepository.findByOwner_Id(currentUser.getId());
+            stores = storeRepository.findByOwner_Id(currentUser.getId());
+        } else {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individual users cannot view stores.");
         }
-        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individual users cannot view stores.");
+        
+        for(Store s : stores) {
+            s.setProducts(productRepository.countByStoreId(s.getId()));
+            List<Order> orders = orderRepository.findByStoreId(s.getId());
+            double rev = orders.stream().mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0).sum();
+            s.setRevenue(rev);
+        }
+        
+        return stores;
     }
 
     public Store getStoreById(Long id, String email) {

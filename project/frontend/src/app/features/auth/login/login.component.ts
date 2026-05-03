@@ -60,7 +60,7 @@ export class LoginComponent {
       this.apiService.login(this.email, this.password).subscribe({
         next: (res: any) => {
           const user: User = {
-            id: 0,
+            id: res.userId || 0,
             email: res.email || this.email,
             role: res.role,
             token: res.access_token

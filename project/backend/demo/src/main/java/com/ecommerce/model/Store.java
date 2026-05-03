@@ -22,4 +22,10 @@ public class Store {
     private String name;
 
     private String status;
+
+    @Transient
+    private Long products;
+
+    @Transient
+    private Double revenue;
 }

@@ -39,4 +39,10 @@ public class Product {
 
     @Column(name = "exchange_rate")
     private Double exchangeRate;
+
+    @Column(name = "stock")
+    private Integer stock;
+
+    @Column(name = "average_rating")
+    private Double averageRating;
 }

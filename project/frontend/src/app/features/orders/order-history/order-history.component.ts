@@ -16,16 +16,29 @@ export class OrderHistoryComponent implements OnInit {
   filteredOrders: any[] = [];
   statusFilter = '';
   searchTerm = '';
+  isLoading = false;
+  currentPage = 0;
+  totalPages = 0;
+  totalElements = 0;
 
   constructor(private router: Router, private apiService: ApiService) {}
 
   ngOnInit() {
-    this.apiService.getOrders().subscribe({
+    this.loadPage(0);
+  }
+
+  loadPage(page: number) {
+    this.isLoading = true;
+    this.apiService.getOrdersPaged(page).subscribe({
       next: (data) => {
-        this.orders = data;
-        this.filteredOrders = data;
+        this.orders = data.content ?? [];
+        this.currentPage = data.number ?? 0;
+        this.totalPages = data.totalPages ?? 1;
+        this.totalElements = data.totalElements ?? this.orders.length;
+        this.applyFilters();
+        this.isLoading = false;
       },
-      error: (err) => console.error('Failed to load orders', err)
+      error: (err) => { console.error('Failed to load orders', err); this.isLoading = false; }
     });
   }
 
@@ -38,6 +51,9 @@ export class OrderHistoryComponent implements OnInit {
     }
     this.filteredOrders = result;
   }
+
+  prevPage() { if (this.currentPage > 0) this.loadPage(this.currentPage - 1); }
+  nextPage() { if (this.currentPage < this.totalPages - 1) this.loadPage(this.currentPage + 1); }
 
   trackOrder(orderId: number) {
     this.router.navigate(['/tracking', orderId]);

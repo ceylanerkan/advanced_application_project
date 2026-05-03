@@ -3,6 +3,7 @@ package com.ecommerce.controller;
 import java.util.List;
 
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.model.Order;
@@ -34,14 +36,20 @@ public class OrderController {
 
     
 
-    @Operation(summary = "Get all orders", description = "Retrieves orders. Individuals see their own, Corporates see their store's, Admins see all.")
+    @Operation(summary = "Get all orders", description = "Retrieves orders. Add ?page=0&size=20 for paginated results.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Orders retrieved successfully"),
             @ApiResponse(responseCode = "401", description = "Unauthorized - Missing or invalid token")
     })
     @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders(Authentication authentication) {
-        // authentication.getName() returns the email based on your UserDetails implementation
+    public ResponseEntity<?> getAllOrders(
+            Authentication authentication,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size) {
+        if (page != null && size != null) {
+            Page<Order> result = orderService.getOrdersPaged(authentication.getName(), page, size);
+            return ResponseEntity.ok(result);
+        }
         return ResponseEntity.ok(orderService.getAllOrders(authentication.getName()));
     }
 

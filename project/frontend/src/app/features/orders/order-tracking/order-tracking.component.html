@@ -51,7 +51,7 @@
         <h4 style="margin-bottom: 1rem;">Order Info</h4>
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
           <span style="color: var(--text-secondary);">Order Date</span>
-          <span>{{ order.createdAt }}</span>
+          <span>{{ order.createdAt?.split('T')[0] || '-' }}</span>
         </div>
         <div style="display: flex; justify-content: space-between;">
           <span style="color: var(--text-secondary);">Grand Total</span>

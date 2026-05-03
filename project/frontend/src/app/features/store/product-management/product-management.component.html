@@ -42,7 +42,10 @@
       <div class="form-group"><label>Name</label><input [(ngModel)]="currentProduct.name" placeholder="Product name"></div>
       <div class="form-group"><label>SKU</label><input [(ngModel)]="currentProduct.sku" placeholder="SKU-0001"></div>
       <div class="form-group"><label>Category</label><input [(ngModel)]="currentProduct.category" placeholder="Electronics"></div>
-      <div class="form-group"><label>Price ($)</label><input type="number" [(ngModel)]="currentProduct.unitPrice"></div>
+      <div style="display:flex; gap: 0.75rem;">
+        <div class="form-group" style="flex:1"><label>Price ($)</label><input type="number" [(ngModel)]="currentProduct.unitPrice"></div>
+        <div class="form-group" style="flex:1"><label>Stock</label><input type="number" [(ngModel)]="currentProduct.stock"></div>
+      </div>
       <div style="display:flex; gap: 0.5rem; margin-top: 1rem;">
         <button class="btn btn-primary" (click)="save()">{{ editMode ? 'Update' : 'Create' }}</button>
         <button class="btn btn-outline" (click)="closeModal()">Cancel</button>

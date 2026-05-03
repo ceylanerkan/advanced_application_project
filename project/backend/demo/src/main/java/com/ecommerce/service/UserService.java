@@ -2,6 +2,8 @@ package com.ecommerce.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -21,11 +23,20 @@ public class UserService {
     public List<User> getAllUsers(String email) {
         User currentUser = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
-        
+
         if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can view all users");
         }
         return userRepository.findAll();
+    }
+
+    public Page<User> getUsersPaged(String email, int page, int size) {
+        User currentUser = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can view all users");
+        }
+        return userRepository.findAll(PageRequest.of(page, size));
     }
 
     public User getUserByIdSecurely(Long id, String email) {

@@ -22,4 +22,6 @@ public class AuthenticationResponse {
     private String email;
 
     private String role;
+
+    private Long userId;
 }

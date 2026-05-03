@@ -17,7 +17,12 @@
     <button class="btn btn-outline" (click)="exportCSV()">📥 Export CSV</button>
   </div>
 
-  <div class="glass-panel data-table-wrapper">
+  <div *ngIf="isLoading" style="text-align:center; padding: 3rem;">
+    <span style="font-size:2rem;">⏳</span>
+    <p style="color: var(--text-secondary)">Loading orders...</p>
+  </div>
+
+  <div class="glass-panel data-table-wrapper" *ngIf="!isLoading">
     <table>
       <thead>
         <tr>
@@ -33,18 +38,27 @@
       <tbody>
         <tr *ngFor="let o of filteredOrders">
           <td><strong>#{{ o.id }}</strong></td>
-          <td>{{ o.store.name }}</td>
+          <td>{{ o.store?.name }}</td>
           <td>{{ o.itemCount }} item(s)</td>
-          <td>${{ o.grandTotal.toFixed(2) }}</td>
-          <td>{{ o.createdAt }}</td>
+          <td>${{ o.grandTotal?.toFixed(2) }}</td>
+          <td>{{ o.createdAt?.split('T')[0] || '-' }}</td>
           <td>
-            <span class="status-badge" [ngClass]="o.status.toLowerCase()">{{ o.status }}</span>
+            <span class="status-badge" [ngClass]="o.status?.toLowerCase()">{{ o.status }}</span>
           </td>
           <td>
             <button class="action-btn" (click)="trackOrder(o.id)">🚚 Track</button>
           </td>
         </tr>
+        <tr *ngIf="filteredOrders.length === 0">
+          <td colspan="7" style="text-align:center; padding: 2rem; color: var(--text-secondary)">No orders found.</td>
+        </tr>
       </tbody>
     </table>
+  </div>
+
+  <div *ngIf="!isLoading && totalPages > 1" class="glass-panel" style="display:flex; align-items:center; justify-content:center; gap:1rem; padding:1rem; margin-top:1rem;">
+    <button class="btn btn-outline" (click)="prevPage()" [disabled]="currentPage === 0">← Prev</button>
+    <span style="color: var(--text-secondary)">Page {{ currentPage + 1 }} of {{ totalPages }} &nbsp;({{ totalElements }} orders)</span>
+    <button class="btn btn-outline" (click)="nextPage()" [disabled]="currentPage >= totalPages - 1">Next →</button>
   </div>
 </div>

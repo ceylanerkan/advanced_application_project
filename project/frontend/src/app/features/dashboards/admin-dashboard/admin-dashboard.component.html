@@ -7,23 +7,23 @@
   <div class="kpi-grid grid grid-cols-4">
     <div class="glass-panel kpi-card">
       <h4>Total Users</h4>
-      <h2>12,450</h2>
-      <span class="text-success">+12% this month</span>
+      <h2>{{ totalUsers }}</h2>
+      <span class="text-success">Active accounts</span>
     </div>
     <div class="glass-panel kpi-card">
       <h4>Total Revenue</h4>
-      <h2>$1.2M</h2>
-      <span class="text-success">+5% this month</span>
+      <h2>${{ totalRevenue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }}</h2>
+      <span class="text-success">Platform wide</span>
     </div>
     <div class="glass-panel kpi-card">
       <h4>Active Stores</h4>
-      <h2>342</h2>
-      <span class="text-warning">-2% this month</span>
+      <h2>{{ activeStores }}</h2>
+      <span class="text-warning">Operating stores</span>
     </div>
     <div class="glass-panel kpi-card">
       <h4>Total Orders</h4>
-      <h2>28,903</h2>
-      <span class="text-success">+8% this month</span>
+      <h2>{{ totalOrders }}</h2>
+      <span class="text-success">Completed sales</span>
     </div>
   </div>
 

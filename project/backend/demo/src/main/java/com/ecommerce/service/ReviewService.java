@@ -1,5 +1,6 @@
 package com.ecommerce.service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
@@ -7,8 +8,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.ecommerce.exception.ResourceNotFoundException;
+import com.ecommerce.model.Product;
 import com.ecommerce.model.Review;
 import com.ecommerce.model.User;
+import com.ecommerce.repository.ProductRepository;
 import com.ecommerce.repository.ReviewRepository;
 import com.ecommerce.repository.UserRepository;
 
@@ -20,6 +23,7 @@ public class ReviewService {
 
     private final ReviewRepository reviewRepository;
     private final UserRepository userRepository;
+    private final ProductRepository productRepository;
 
     public List<Review> getAllReviews() {
         return reviewRepository.findAll();
@@ -32,9 +36,16 @@ public class ReviewService {
 
     public Review createReview(Review review, String email) {
         User currentUser = userRepository.findByEmail(email).orElseThrow();
-        
-        // Mitigate AV-11: Force review ownership to logged in user
         review.setUser(currentUser);
+
+        if (review.getProduct() == null || review.getProduct().getId() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Product ID is required");
+        }
+        Product product = productRepository.findById(review.getProduct().getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        review.setProduct(product);
+
+        review.setCreatedAt(LocalDateTime.now().toString());
 
         return reviewRepository.save(review);
     }
@@ -51,7 +62,7 @@ public class ReviewService {
         review.setComment(reviewDetails.getComment());
         review.setSentiment(reviewDetails.getSentiment());
         review.setProduct(reviewDetails.getProduct());
-        review.setCreatedAt(reviewDetails.getCreatedAt());
+        // createdAt is intentionally not updated — preserve original timestamp
         
         return reviewRepository.save(review);
     }

@@ -6,6 +6,7 @@ import { SafeHtmlPipe } from '../../../core/pipes/safe-html.pipe';
 import { PlotlyModule, PlotlyService } from 'angular-plotly.js';
 import * as PlotlyJS from 'plotly.js-dist-min';
 import { AuthService } from '../../../core/services/auth.service';
+import { ApiService } from '../../../core/services/api.service';
 
 PlotlyService.setPlotly(PlotlyJS);
 
@@ -25,13 +26,16 @@ interface ChatMessage {
 })
 export class ChatbotUiComponent implements AfterViewChecked {
   @ViewChild('scrollContainer') private scrollContainer!: ElementRef;
-  
+
   userInput = '';
+  isLoading = false;
+  private sessionId = `session-${Date.now()}`;
+
   messages: ChatMessage[] = [
     { id: 1, text: 'Hello! I am your AI Text2SQL assistant. Ask me anything about your e-commerce data.', isUser: false }
   ];
 
-  constructor(private router: Router, private authService: AuthService) {}
+  constructor(private router: Router, private authService: AuthService, private apiService: ApiService) {}
 
   ngAfterViewChecked() {
     this.scrollToBottom();
@@ -44,42 +48,41 @@ export class ChatbotUiComponent implements AfterViewChecked {
   }
 
   sendMessage() {
-    if (!this.userInput.trim()) return;
+    if (!this.userInput.trim() || this.isLoading) return;
 
-    // Add User Message
-    this.messages.push({
-      id: Date.now(),
-      text: this.userInput,
-      isUser: true
-    });
-
-    const query = this.userInput.toLowerCase();
+    this.messages.push({ id: Date.now(), text: this.userInput, isUser: true });
+    const question = this.userInput;
     this.userInput = '';
+    this.isLoading = true;
 
-    // Mock AI Response with Plotly Data
-    setTimeout(() => {
-      let aiResponse: ChatMessage = {
-        id: Date.now(),
-        text: 'Here is the data you requested:',
-        isUser: false
-      };
+    this.apiService.askAI(question, this.sessionId).subscribe({
+      next: (response: any) => {
+        this.isLoading = false;
+        const msg: ChatMessage = { id: Date.now(), text: '', isUser: false };
 
-      if (query.includes('revenue') || query.includes('sales')) {
-        aiResponse.plotData = {
-          data: [{ x: ['Jan', 'Feb', 'Mar'], y: [20, 14, 23], type: 'bar', marker: {color: '#3b82f6'} }],
-          layout: { 
-            title: 'Q1 Revenue', 
-            paper_bgcolor: 'rgba(0,0,0,0)', 
-            plot_bgcolor: 'rgba(0,0,0,0)',
-            font: { color: '#f8fafc' }
+        if (response.error) {
+          msg.text = `Error: ${response.error}`;
+        } else {
+          msg.text = response.finalAnswer || 'No response from AI.';
+          if (response.visualizationCode) {
+            try {
+              msg.plotData = JSON.parse(response.visualizationCode);
+            } catch {
+              msg.text += `<br><br><code>${response.visualizationCode}</code>`;
+            }
           }
-        };
-      } else {
-        aiResponse.text = "I executed the following SQL query:<br><br><code>SELECT * FROM users;</code><br><br>Found 10,000 users.";
+        }
+        this.messages.push(msg);
+      },
+      error: () => {
+        this.isLoading = false;
+        this.messages.push({
+          id: Date.now(),
+          text: 'The AI service is currently unavailable. Please try again later.',
+          isUser: false
+        });
       }
-
-      this.messages.push(aiResponse);
-    }, 1000);
+    });
   }
 
   goBack() {
