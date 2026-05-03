@@ -7,7 +7,7 @@ import java.util.List;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
-    
+    long countByUserId(Long userId);
     // Finds all orders linked to a user with this specific email
     List<Order> findByUser_Email(String email);
     

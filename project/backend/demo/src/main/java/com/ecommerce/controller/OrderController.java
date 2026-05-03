@@ -32,6 +32,8 @@ public class OrderController {
 
     private final OrderService orderService;
 
+    
+
     @Operation(summary = "Get all orders", description = "Retrieves orders. Individuals see their own, Corporates see their store's, Admins see all.")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Orders retrieved successfully"),

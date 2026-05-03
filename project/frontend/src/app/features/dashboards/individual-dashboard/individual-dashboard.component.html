@@ -22,37 +22,31 @@
     <div class="kpi-grid grid grid-cols-3">
       <div class="glass-panel kpi-card">
         <h4>Total Orders</h4>
-        <h2>12</h2>
-        <span class="text-success">+2 this month</span>
+        <h2>{{ totalOrders }}</h2>
+        <span class="text-success">Lifetime</span>
       </div>
       <div class="glass-panel kpi-card">
         <h4>Total Spent</h4>
-        <h2>$1,250</h2>
+        <h2>${{ totalSpent }}</h2>
         <span class="text-secondary">Lifetime</span>
       </div>
       <div class="glass-panel kpi-card">
         <h4>Reviews Left</h4>
-        <h2>5</h2>
-        <span class="text-success">Avg 4.8 stars</span>
+        <h2>{{ totalReviews }}</h2>
+        <span class="text-success">Lifetime</span>
       </div>
     </div>
 
     <div class="charts-grid grid grid-cols-2">
       <div class="glass-panel chart-container animate-fade-in">
         <h4>My Spend History</h4>
-        <canvas baseChart
-          [type]="'line'"
-          [data]="spendData"
-          [options]="chartOptions">
+        <canvas baseChart [type]="'line'" [data]="spendData" [options]="chartOptions">
         </canvas>
       </div>
 
       <div class="glass-panel chart-container animate-fade-in">
         <h4>Purchases by Category</h4>
-        <canvas baseChart
-          [type]="'doughnut'"
-          [data]="categoryData"
-          [options]="doughnutOptions">
+        <canvas baseChart [type]="'doughnut'" [data]="categoryData" [options]="doughnutOptions">
         </canvas>
       </div>
     </div>
