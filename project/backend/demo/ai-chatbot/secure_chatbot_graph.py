@@ -1,6 +1,8 @@
 import json
 from typing import TypedDict, Optional, Union, Dict, Any
 from langgraph.graph import StateGraph, END
+from sqlalchemy import create_engine, text
+from sqlalchemy.exc import SQLAlchemyError
 
 # Import the 5 hardened agents we defined earlier
 from agents import (
@@ -10,6 +12,16 @@ from agents import (
     visualization_agent,
     error_agent
 )
+
+# ==========================================
+# 0. Database Configuration
+# ==========================================
+# ⚠️ REPLACE THIS STRING with your actual database credentials!
+# Format: dialect+driver://username:password@host:port/database
+# MySQL Example: "mysql+pymysql://root:password123@localhost:3306/ecommerce_db"
+# PostgreSQL Example: "postgresql://postgres:password123@localhost:5432/ecommerce_db"
+DB_URI = "mysql+pymysql://root:admin@localhost:3306/advanced_project" 
+engine = create_engine(DB_URI)
 
 # ==========================================
 # 1. State Management
@@ -32,11 +44,19 @@ class AgentState(TypedDict):
 
 def guardrails_node(state: AgentState):
     """Checks if the question is in scope and secure."""
-    prompt_input = f"User ID: {state['current_user_id']}, Role: {state['current_user_role']}\nQuestion: {state['question']}"
+    
+    # Using strict delimiters to prevent False Positives (AV-01 protection)
+    prompt_input = f"""
+    [TRUSTED SYSTEM METADATA]
+    Authenticated User ID: {state['current_user_id']}
+    Authenticated Role: {state['current_user_role']}
+
+    [UNTRUSTED USER QUESTION]
+    Question: {state['question']}
+    """
     response = guardrails_agent.invoke({"input": prompt_input})
     
     # We use a simple heuristic to determine rejection. 
-    # In a production app, structured output (like JSON) is preferred.
     response_text = response.content.lower()
     is_rejected = "reject" in response_text or "out-of-scope" in response_text or "out of scope" in response_text or "violation" in response_text
     
@@ -64,19 +84,40 @@ def sql_node(state: AgentState):
     return {"sql_query": sql_query, "iteration_count": iteration_count + 1}
 
 def execute_sql_node(state: AgentState):
-    """Dummy Execute SQL tool node."""
+    """Executes the generated SQL query against the real database."""
     sql = state.get("sql_query", "")
     
-    # Simulate a database enforcing some of the constraints
-    if "DROP" in sql.upper() or "UPDATE" in sql.upper() or "DELETE" in sql.upper() or "INSERT" in sql.upper():
+    # 1. Enforce strict Read-Only constraints (Crucial for Security!)
+    upper_sql = sql.upper()
+    if any(forbidden in upper_sql for forbidden in ["DROP ", "UPDATE ", "DELETE ", "INSERT ", "ALTER ", "TRUNCATE "]):
         return {"error": "Unauthorized SQL command detected. Only SELECT is allowed.", "query_result": None}
     
-    if "SELECT *" in sql.upper():
+    # 2. Enforce SELECT * ban (AV-12 requirement)
+    if "SELECT *" in upper_sql:
         return {"error": "SELECT * is forbidden. Explicitly name columns.", "query_result": None}
     
-    # Dummy success data
-    dummy_data = {"status": "success", "data": [{"user_id": state['current_user_id'], "metric": 1500}]}
-    return {"query_result": json.dumps(dummy_data), "error": None}
+    # 3. Execute the query against the real database
+    try:
+        with engine.connect() as connection:
+            result = connection.execute(text(sql))
+            # Fetch all rows and convert them to a list of dictionaries
+            rows = [dict(row._mapping) for row in result]
+            
+            # Helper to convert dates/decimals to strings for JSON serialization
+            def custom_serializer(obj):
+                if hasattr(obj, 'isoformat'):
+                    return obj.isoformat()
+                return str(obj)
+
+            json_result = json.dumps(rows, default=custom_serializer)
+            return {"query_result": json_result, "error": None}
+            
+    except SQLAlchemyError as e:
+        # Capture the database error so the Error Agent can fix it!
+        error_msg = str(e.__dict__.get('orig', e))
+        return {"error": error_msg, "query_result": None}
+    except Exception as e:
+        return {"error": str(e), "query_result": None}
 
 def analysis_node(state: AgentState):
     """Explains the query results in natural language."""
@@ -94,8 +135,9 @@ def visualization_node(state: AgentState):
     prompt_input = f"Question: {state['question']}\nQuery Result: {state['query_result']}"
     response = visualization_agent.invoke({"input": prompt_input})
     
-    # Clean markdown to extract just the JSON
+    # Clean markdown to extract just the JSON (Fixed string literal)
     viz_code = response.content.replace('```json', '').replace('```', '').strip()
+    
     return {"visualization_code": viz_code}
 
 # ==========================================
