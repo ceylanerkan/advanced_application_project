@@ -79,7 +79,12 @@ public class OrderItemService {
 
         orderItem.setOrder(order);
         orderItem.setProduct(product);
-        return orderItemRepository.save(orderItem);
+        OrderItem saved = orderItemRepository.save(orderItem);
+
+        // Recalculate and persist the parent order's grandTotal from all its items
+        recalculateOrderTotal(order);
+
+        return saved;
     }
 
     public OrderItem updateOrderItem(Long id, OrderItem orderItemDetails, String email) {
@@ -97,7 +102,9 @@ public class OrderItemService {
         orderItem.setExchangeRate(orderItemDetails.getExchangeRate());
         orderItem.setProduct(orderItemDetails.getProduct());
 
-        return orderItemRepository.save(orderItem);
+        OrderItem saved = orderItemRepository.save(orderItem);
+        recalculateOrderTotal(orderItem.getOrder());
+        return saved;
     }
 
     public void deleteOrderItem(Long id, String email) {
@@ -107,6 +114,43 @@ public class OrderItemService {
         if ("INDIVIDUAL".equalsIgnoreCase(currentUser.getRoleType())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Individuals cannot delete order items.");
         }
+        Order parentOrder = orderItem.getOrder();
         orderItemRepository.delete(orderItem);
+        recalculateOrderTotal(parentOrder);
+    }
+
+    /**
+     * Admin utility: iterates every order and recalculates its grandTotal from
+     * its line items. Call once to fix any legacy $0.00 orders in the database.
+     */
+    public void recalculateAllOrders(String email) {
+        User currentUser = userRepository.findByEmail(email).orElseThrow();
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Only admins can trigger a full recalculation.");
+        }
+        List<Order> allOrders = orderRepository.findAll();
+        for (Order order : allOrders) {
+            recalculateOrderTotal(order);
+        }
+    }
+
+    /**
+     * Recalculates the grandTotal of an order by summing all its line items
+     * (price * quantity), then saves the updated order. This ensures the DB
+     * is always the single source of truth for revenue figures.
+     */
+    private void recalculateOrderTotal(Order order) {
+        List<OrderItem> allItems = orderItemRepository.findByOrder_Id(order.getId());
+        double total = allItems.stream()
+            .mapToDouble(i -> {
+                double price = i.getPrice() != null ? i.getPrice() : 0.0;
+                int qty = i.getQuantity() != null ? i.getQuantity() : 0;
+                return price * qty;
+            })
+            .sum();
+        // Apply 8% tax to match frontend calculation
+        double grandTotal = total * 1.08;
+        order.setGrandTotal(grandTotal);
+        orderRepository.save(order);
     }
 }

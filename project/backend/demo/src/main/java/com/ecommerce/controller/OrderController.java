@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.ecommerce.model.Order;
 import com.ecommerce.service.OrderService;
+import com.ecommerce.service.OrderItemService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -33,6 +34,7 @@ import lombok.RequiredArgsConstructor;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OrderItemService orderItemService;
 
     
 
@@ -92,5 +94,12 @@ public class OrderController {
     public ResponseEntity<Void> deleteOrder(@PathVariable Long id, Authentication authentication) {
         orderService.deleteOrder(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(summary = "Recalculate all order totals", description = "Admin utility: recalculates grandTotal for every order from its line items. Fixes stale $0.00 orders.")
+    @PostMapping("/recalculate-all")
+    public ResponseEntity<String> recalculateAllOrders(Authentication authentication) {
+        orderItemService.recalculateAllOrders(authentication.getName());
+        return ResponseEntity.ok("All order totals recalculated successfully.");
     }
 }

@@ -1,7 +1,21 @@
 <div class="page-content animate-fade-in">
-  <header class="page-header">
-    <h2>Platform Overview</h2>
-    <p>System-wide analytics and administration.</p>
+  <header class="page-header" style="display:flex; justify-content:space-between; align-items:flex-start;">
+    <div>
+      <h2>Platform Overview</h2>
+      <p>System-wide analytics and administration.</p>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:0.5rem;">
+      <div style="display:flex; gap:0.5rem;">
+        <button class="btn btn-primary" (click)="recalculateOrders()" [disabled]="isRecalculating" style="font-size:0.8rem; padding: 0.4rem 1rem;">
+          {{ isRecalculating ? '⏳ Recalculating...' : '🔄 Fix Order Totals' }}
+        </button>
+        <button class="btn btn-secondary" (click)="populateImages()" [disabled]="isPopulating" style="font-size:0.8rem; padding: 0.4rem 1rem;">
+          {{ isPopulating ? '⏳ Populating...' : '🖼️ Populate Product Images' }}
+        </button>
+      </div>
+      <span *ngIf="recalculateMsg" style="font-size:0.8rem; color: var(--text-secondary);">{{ recalculateMsg }}</span>
+      <span *ngIf="populateMsg" style="font-size:0.8rem; color: var(--text-secondary);">{{ populateMsg }}</span>
+    </div>
   </header>
 
   <div class="kpi-grid grid grid-cols-4">

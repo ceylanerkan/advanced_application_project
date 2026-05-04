@@ -74,7 +74,7 @@
             <tr *ngFor="let item of items" style="border-bottom: 1px solid #1e293b;">
               <td style="padding: 0.5rem;">{{ item.product?.name || '—' }}</td>
               <td style="padding: 0.5rem; text-align:center;">{{ item.quantity }}</td>
-              <td style="padding: 0.5rem; text-align:right;">${{ (item.price * item.quantity)?.toFixed(2) }}</td>
+              <td style="padding: 0.5rem; text-align:right;">${{ (item.price * item.quantity).toFixed(2) }}</td>
             </tr>
           </tbody>
         </table>

@@ -45,4 +45,7 @@ public class Product {
 
     @Column(name = "average_rating")
     private Double averageRating;
+
+    @Column(name = "image_url", length = 500)
+    private String imageUrl;
 }

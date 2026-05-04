@@ -1,12 +1,8 @@
-.chat-layout {
-  display: flex;
-  flex-direction: column;
-}
-
 .chat-window {
-  flex: 1;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 220px);
+  min-height: 500px;
   overflow: hidden;
   padding: 0;
 }
@@ -37,19 +33,24 @@
     justify-content: flex-start;
 
     .message-bubble {
-      background-color: rgba(255, 255, 255, 0.1);
+      background-color: rgba(255, 255, 255, 0.07);
       border-bottom-left-radius: 4px;
     }
   }
 }
 
 .message-bubble {
-  /* Increased from 70% to 85% to give charts room to breathe */
   max-width: 85%;
   padding: var(--spacing-md);
   border-radius: var(--radius-lg);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  overflow-x: auto; /* Allows scrolling on mobile if the chart is wide */
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.15);
+  overflow-x: auto;
+}
+
+.message-text {
+  font-size: 0.9rem;
+  line-height: 1.6;
+  word-break: break-word;
 }
 
 .plotly-container {
@@ -57,11 +58,9 @@
   background: rgba(15, 23, 42, 0.5);
   border-radius: var(--radius-md);
   padding: var(--spacing-sm);
-
-  /* NEW GRAPH FIXES */
   display: block;
   width: 100%;
-  min-width: 500px; /* Forces the graph to draw wide enough to read */
+  min-width: 500px;
   min-height: 350px;
 }
 
@@ -76,4 +75,28 @@
     flex: 1;
     margin-bottom: 0;
   }
+}
+
+/* Typing indicator dots */
+.typing-indicator {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  padding: 4px 0;
+
+  span {
+    width: 8px;
+    height: 8px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    animation: bounce 1.2s infinite ease-in-out;
+
+    &:nth-child(2) { animation-delay: 0.2s; }
+    &:nth-child(3) { animation-delay: 0.4s; }
+  }
+}
+
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
 }

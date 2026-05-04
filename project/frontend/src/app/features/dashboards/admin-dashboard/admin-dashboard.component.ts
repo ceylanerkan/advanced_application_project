@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { NgChartsModule } from 'ng2-charts';
@@ -8,7 +9,7 @@ import { ApiService } from '../../../core/services/api.service';
 @Component({
   selector: 'app-admin-dashboard',
   standalone: true,
-  imports: [RouterModule, NgChartsModule],
+  imports: [CommonModule, RouterModule, NgChartsModule],
   templateUrl: './admin-dashboard.component.html',
   styleUrls: []
 })
@@ -98,6 +99,49 @@ export class AdminDashboardComponent implements OnInit {
         this.doughnutChartData = { ...this.doughnutChartData };
       },
       error: (err: any) => console.error('Failed to load admin dashboard data', err)
+    });
+  }
+
+  isRecalculating = false;
+  recalculateMsg = '';
+
+  recalculateOrders() {
+    this.isRecalculating = true;
+    this.recalculateMsg = '';
+    this.apiService.recalculateAllOrders().subscribe({
+      next: (msg: string) => {
+        this.isRecalculating = false;
+        this.recalculateMsg = '✅ All order totals updated! Refreshing dashboard...';
+        setTimeout(() => {
+          this.recalculateMsg = '';
+          this.fetchAdminDashboard();
+        }, 2000);
+      },
+      error: (err: any) => {
+        this.isRecalculating = false;
+        this.recalculateMsg = '❌ Recalculation failed. Check console.';
+        console.error('Recalculate error', err);
+      }
+    });
+  }
+
+  isPopulating = false;
+  populateMsg = '';
+
+  populateImages() {
+    this.isPopulating = true;
+    this.populateMsg = '';
+    this.apiService.populateProductImages().subscribe({
+      next: (res: any) => {
+        this.isPopulating = false;
+        this.populateMsg = `✅ ${res.message}`;
+        setTimeout(() => this.populateMsg = '', 4000);
+      },
+      error: (err: any) => {
+        this.isPopulating = false;
+        this.populateMsg = '❌ Failed to populate images. Check console.';
+        console.error('Populate images error', err);
+      }
     });
   }
 

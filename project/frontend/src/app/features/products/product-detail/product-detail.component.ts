@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { HttpClient } from '@angular/common/http';
 import { ApiService } from '../../../core/services/api.service';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-product-detail',
@@ -13,23 +15,29 @@ import { ApiService } from '../../../core/services/api.service';
 })
 export class ProductDetailComponent implements OnInit {
   product: any = null;
+  productImageUrl: string | null = null;
   reviews: any[] = [];
   newRating = 5;
   newComment = '';
   quantity = 1;
 
-  constructor(private route: ActivatedRoute, private router: Router, private apiService: ApiService) {}
+  constructor(
+    private route: ActivatedRoute,
+    private router: Router,
+    private apiService: ApiService,
+    private http: HttpClient
+  ) {}
 
   ngOnInit() {
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    
+
     this.apiService.getProduct(id).subscribe({
       next: (data) => {
         this.product = data;
-        // Using real averageRating from backend now
         if (!this.product.rating) {
           this.product.rating = this.product.averageRating || 0;
         }
+        this.fetchProductImage();
       },
       error: (err) => {
         console.error('Error fetching product', err);
@@ -87,6 +95,34 @@ export class ProductDetailComponent implements OnInit {
         console.error('Failed to submit review', err);
         alert('Failed to submit review.');
       }
+    });
+  }
+
+  fetchProductImage() {
+    const p = this.product;
+    // Use existing DB URL if it's not a broken source.unsplash.com link
+    if (p.imageUrl && !p.imageUrl.includes('source.unsplash.com')) {
+      this.productImageUrl = p.imageUrl;
+      return;
+    }
+
+    const key = environment.unsplashKey;
+    if (!key || key === 'YOUR_UNSPLASH_ACCESS_KEY') return;
+
+    const query = p.name
+      .split(/\s+/)
+      .filter((w: string) => w.length > 1 && !/^[A-Z0-9]*\d[A-Z0-9-]*$/.test(w))
+      .slice(0, 4)
+      .join(' ') || p.category?.name || p.name;
+
+    this.http.get<any>(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${key}`
+    ).subscribe({
+      next: res => {
+        const url = res.results?.[0]?.urls?.regular;
+        if (url) this.productImageUrl = url;
+      },
+      error: () => {}
     });
   }
 

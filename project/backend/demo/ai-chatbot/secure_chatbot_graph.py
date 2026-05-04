@@ -10,7 +10,7 @@ from agents import (
 )
 
 # --- 0. Database Configuration ---
-DB_URI = "mysql+pymysql://root:admin@localhost:3306/advanced_project" 
+DB_URI = "mysql+pymysql://root:Safak321*@localhost:3306/ecommerce_db" 
 engine = create_engine(DB_URI)
 
 class AgentState(TypedDict):

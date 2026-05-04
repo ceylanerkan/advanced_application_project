@@ -1,10 +1,10 @@
 <div class="page-content animate-fade-in">
   <header class="page-header">
     <h2>⭐ Review Management</h2>
-    <p>Monitor and respond to customer reviews.</p>
+    <p>Monitor and respond to customer reviews. Showing {{ pagedReviews.length }} of {{ reviews.length }} total.</p>
   </header>
 
-  <div class="glass-panel" *ngFor="let r of reviews" style="margin-bottom: 1rem;">
+  <div class="glass-panel" *ngFor="let r of pagedReviews" style="margin-bottom: 1rem;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
       <div>
         <strong>{{ r.user?.email || r.user || 'Anonymous' }}</strong> on <em>{{ r.product?.name || r.product || 'Product' }}</em>
@@ -24,5 +24,18 @@
       <input placeholder="Write a reply..." [(ngModel)]="replyText[r.id]" style="flex:1">
       <button class="btn btn-primary" style="white-space:nowrap;" (click)="submitReply(r)">Reply</button>
     </div>
+  </div>
+
+  <!-- Pagination Controls -->
+  <div *ngIf="totalPages > 1" style="display:flex; justify-content:center; align-items:center; gap:0.5rem; margin-top:1.5rem;">
+    <button class="btn btn-secondary" (click)="goToPage(currentPage - 1)" [disabled]="currentPage === 1" style="padding:0.4rem 0.9rem; font-size:0.85rem;">‹ Prev</button>
+    <button *ngFor="let p of pageNumbers"
+      (click)="goToPage(p)"
+      [style.background]="p === currentPage ? 'var(--accent-primary)' : 'transparent'"
+      [style.color]="p === currentPage ? 'white' : 'var(--text-secondary)'"
+      style="border:1px solid var(--border-color); border-radius:var(--radius-sm); padding:0.4rem 0.75rem; cursor:pointer; font-size:0.85rem; transition: all 0.2s;">
+      {{ p }}
+    </button>
+    <button class="btn btn-secondary" (click)="goToPage(currentPage + 1)" [disabled]="currentPage === totalPages" style="padding:0.4rem 0.9rem; font-size:0.85rem;">Next ›</button>
   </div>
 </div>

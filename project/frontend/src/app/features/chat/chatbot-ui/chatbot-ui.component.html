@@ -1,54 +1,51 @@
-<div class="dashboard-container">
-  <aside class="sidebar glass-panel">
-    <h3>AI Assistant</h3>
-    <nav>
-      <ul>
-        <li><a (click)="goBack()">Back to Dashboard</a></li>
-      </ul>
-    </nav>
-  </aside>
-
-  <main class="content chat-layout">
-    <div class="chat-window glass-panel">
-      <div class="chat-messages" #scrollContainer>
-        @for (msg of messages; track msg.id) {
-          <div class="message-wrapper" [class.user]="msg.isUser">
-            <div class="message-bubble">
-              <div class="message-text" [innerHTML]="msg.text | safeHtml"></div>
-
-              <!-- Plotly Chart Rendering -->
-              @if (msg.plotData) {
-                <div class="plotly-container">
-                  <plotly-plot
-                    [data]="msg.plotData.data"
-                    [layout]="msg.plotData.layout"
-                    [useResizeHandler]="true"
-                    [style]="{position: 'relative', width: '100%', height: '100%', minHeight: '350px'}">
-                  </plotly-plot>
-                </div>
-              }
-            </div>
-          </div>
-        }
-        @if (isLoading) {
-          <div class="message-wrapper">
-            <div class="message-bubble">
-              <div class="message-text" style="color: var(--text-secondary); font-style: italic;">AI is thinking...</div>
-            </div>
-          </div>
-        }
-      </div>
-
-      <div class="chat-input-area">
-        <input
-          type="text"
-          [(ngModel)]="userInput"
-          (keyup.enter)="sendMessage()"
-          placeholder="Ask a question about your data..."
-          [disabled]="isLoading"
-          class="chat-input">
-        <button class="btn btn-primary" (click)="sendMessage()" [disabled]="isLoading">Send</button>
-      </div>
+<div class="page-content animate-fade-in">
+  <header class="page-header" style="display:flex; justify-content:space-between; align-items:center;">
+    <div>
+      <h2>🤖 AI Chatbot</h2>
+      <p>Ask questions about your e-commerce data in plain English.</p>
     </div>
-  </main>
+    <button class="btn btn-secondary" (click)="clearHistory()" style="font-size:0.8rem; padding:0.4rem 1rem; white-space:nowrap;">
+      🗑️ Clear History
+    </button>
+  </header>
+
+  <div class="chat-window glass-panel">
+    <div class="chat-messages" #scrollContainer>
+
+      @for (msg of messages; track msg.id) {
+        <div class="message-wrapper" [class.user]="msg.isUser">
+          <div class="message-bubble">
+            <div class="message-text" [innerHTML]="msg.text | safeHtml"></div>
+
+            <!-- Plotly Chart Placeholder — rendered via vanilla Plotly.newPlot() -->
+            @if (msg.plotId) {
+              <div [id]="msg.plotId" class="plotly-container" style="min-height: 350px; width: 100%;"></div>
+            }
+          </div>
+        </div>
+      }
+
+      @if (isLoading) {
+        <div class="message-wrapper">
+          <div class="message-bubble">
+            <div class="message-text typing-indicator">
+              <span></span><span></span><span></span>
+            </div>
+          </div>
+        </div>
+      }
+
+    </div>
+
+    <div class="chat-input-area">
+      <input
+        type="text"
+        [(ngModel)]="userInput"
+        (keyup.enter)="sendMessage()"
+        placeholder="Ask a question about your data... (e.g. 'What is total revenue this month?')"
+        [disabled]="isLoading"
+        class="chat-input">
+      <button class="btn btn-primary" (click)="sendMessage()" [disabled]="isLoading || !userInput.trim()">Send</button>
+    </div>
+  </div>
 </div>

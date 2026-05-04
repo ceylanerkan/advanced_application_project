@@ -33,6 +33,7 @@ export class AuthService {
 
   logout() {
     localStorage.removeItem('currentUser');
+    sessionStorage.removeItem('chatMessages');
     this.currentUserSubject.next(null);
   }
 }

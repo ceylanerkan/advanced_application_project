@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
+import { HttpParams } from '@angular/common/http';
 
 @Injectable({ providedIn: 'root' })
 export class ApiService {
@@ -23,8 +24,9 @@ export class ApiService {
     return this.http.get<any[]>(`${this.base}/products`);
   }
 
-  getProductsPaged(page = 0, size = 20): Observable<any> {
-    return this.http.get<any>(`${this.base}/products?page=${page}&size=${size}`);
+  getProductsPaged(page: number, size: number = 12): Observable<any> {
+    const params = new HttpParams().set('page', page).set('size', size);
+    return this.http.get<any>(`${this.base}/products`, { params });
   }
 
   getMyProducts(): Observable<any[]> {
@@ -45,6 +47,10 @@ export class ApiService {
 
   deleteProduct(id: number): Observable<any> {
     return this.http.delete(`${this.base}/products/${id}`);
+  }
+
+  populateProductImages(): Observable<any> {
+    return this.http.post(`${this.base}/products/populate-images`, {});
   }
 
   // ── Categories ──
@@ -83,6 +89,10 @@ export class ApiService {
 
   updateOrderStatus(id: number, status: string): Observable<any> {
     return this.http.put(`${this.base}/orders/${id}`, { status });
+  }
+
+  recalculateAllOrders(): Observable<any> {
+    return this.http.post(`${this.base}/orders/recalculate-all`, {});
   }
 
   // ── Order Items ──

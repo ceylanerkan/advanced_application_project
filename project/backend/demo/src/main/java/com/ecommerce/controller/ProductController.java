@@ -1,6 +1,8 @@
 package com.ecommerce.controller;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.data.domain.Page;
 
@@ -11,6 +13,9 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import com.ecommerce.model.Product;
+import com.ecommerce.model.User;
+import com.ecommerce.repository.ProductRepository;
+import com.ecommerce.repository.UserRepository;
 import com.ecommerce.service.ProductService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -26,6 +31,8 @@ import lombok.RequiredArgsConstructor;
 public class ProductController {
 
     private final ProductService productService;
+    private final ProductRepository productRepository;
+    private final UserRepository userRepository;
 
     @Operation(summary = "Get all products", description = "Retrieves products. Add ?page=0&size=20 for paginated results.")
     @GetMapping
@@ -72,5 +79,44 @@ public class ProductController {
     public ResponseEntity<Void> deleteProduct(@PathVariable Long id, Authentication authentication) {
         productService.deleteProduct(id, authentication.getName());
         return ResponseEntity.noContent().build();
+    }
+
+    @Operation(
+        summary = "Populate product images (Admin only)",
+        description = "One-time utility: assigns a stable Unsplash Source image URL to every product that currently has no image. Safe to call multiple times — skips products that already have a URL."
+    )
+    @PostMapping("/populate-images")
+    public ResponseEntity<Map<String, Object>> populateImages(
+            Authentication authentication,
+            @RequestParam(defaultValue = "100") int limit) {
+        User currentUser = userRepository.findByEmail(authentication.getName())
+            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.UNAUTHORIZED, "User not found"));
+
+        if (!"ADMIN".equalsIgnoreCase(currentUser.getRoleType())) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                HttpStatus.FORBIDDEN, "Only admins can populate images.");
+        }
+
+        List<Product> products = productRepository.findAll();
+        int updated = 0;
+
+        for (Product p : products) {
+            if (updated >= limit) break;           // stop after limit
+            if (p.getImageUrl() == null || p.getImageUrl().isBlank()) {
+            // Picsum Photos: stable image per product, no API key needed
+                p.setImageUrl("https://picsum.photos/seed/" + p.getId() + "/400/300");
+                productRepository.save(p);
+                updated++;
+            }
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalProducts", products.size());
+        result.put("imagesAssigned", updated);
+        result.put("limit", limit);
+        result.put("message", updated + " products received image URLs (limit=" + limit + "). "
+            + (products.size() - updated) + " skipped.");
+        return ResponseEntity.ok(result);
     }
 }

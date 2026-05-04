@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import com.ecommerce.model.Order;
 import com.ecommerce.model.Store;
 import com.ecommerce.model.User;
+import com.ecommerce.repository.OrderItemRepository;
 import com.ecommerce.service.OrderService;
 import com.ecommerce.service.StoreService;
 import com.ecommerce.service.UserService;
@@ -36,6 +37,7 @@ public class AdminController {
     private final UserService userService;
     private final StoreService storeService;
     private final OrderService orderService;
+    private final OrderItemRepository orderItemRepository;
 
     // ─── User Management ─────────────────────────────────────────────
 
@@ -168,10 +170,13 @@ public class AdminController {
             regionValues = java.util.Arrays.asList(0, 0, 0, 0);
         }
 
-        double totalRevenueStr = orders.stream().mapToDouble(o -> o.getGrandTotal() != null ? o.getGrandTotal() : 0.0).sum();
+        Double totalRevenueRaw = orderItemRepository.sumTotalRevenue();
+        double totalRevenueStr = totalRevenueRaw != null ? totalRevenueRaw : 0.0;
         long totalOrders = orders.size();
         long totalUsers = userService.getAllUsers(authentication.getName()).size();
-        long activeStores = storeService.getAllStores(authentication.getName()).stream().filter(s -> "OPEN".equalsIgnoreCase(s.getStatus())).count();
+        long activeStores = storeService.getAllStores(authentication.getName()).stream()
+                .filter(s -> s.getStatus() != null && !"suspended".equalsIgnoreCase(s.getStatus()) && !"inactive".equalsIgnoreCase(s.getStatus()))
+                .count();
 
         response.put("monthLabels", java.util.Arrays.asList(monthLabels));
         response.put("monthValues", monthlyRevList);
