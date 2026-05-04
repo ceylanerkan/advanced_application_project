@@ -126,7 +126,7 @@ examples = [
     },
     {
         "input": "User: 7 (USER)\nQ: what is the most shopped category for me this month?",
-        "output": "```sql\nSELECT categories.name, COUNT(order_items.id) AS purchase_count FROM order_items JOIN orders ON order_items.order_id = orders.id JOIN products ON order_items.product_id = products.id JOIN categories ON products.category_id = categories.id WHERE orders.user_id = 7 AND MONTH(orders.created_at) = MONTH(CURDATE()) AND YEAR(orders.created_at) = YEAR(CURDATE()) GROUP BY categories.name ORDER BY purchase_count DESC LIMIT 1;\n```"
+        "output": "```sql\nSELECT categories.name, COUNT(order_items.id) AS purchase_count FROM order_items JOIN orders ON order_items.order_id = orders.id JOIN products ON order_items.product_id = products.id JOIN categories ON products.category_id = categories.id WHERE orders.user_id = 7 AND orders.created_at >= DATE_FORMAT(CURDATE(), '%Y-%m-01') GROUP BY categories.name ORDER BY purchase_count DESC LIMIT 1;\n```"
     },
     {
         "input": "User: 12 (USER)\nQ: show me my order history",
@@ -182,7 +182,7 @@ RULES:
     GROUP BY [column] ORDER BY COUNT(*) DESC (for quantity) 
     or ORDER BY SUM(price) DESC (for spending).
 5. Do not just pick the first row. Use proper aggregate functions.
-6. Ensure the WHERE clause correctly filters for the specific month/year if requested.
+6. For relative date filtering (e.g., "last month", "this year"), use robust INTERVAL logic. Example: `created_at >= DATE_SUB(CURDATE(), INTERVAL 1 MONTH)`. DO NOT use `MONTH(CURDATE()) - 1` as it breaks in January.
 """
 
 # Assemble the final prompt including system instructions, few-shot examples, and the live user input
@@ -235,7 +235,55 @@ error_agent = create_agent(
     - user_purchases (purchase_id, user_id, item_id, item_name, purchase_date, user_role)
     - users (id, email, password_hash, role_type, gender)"""
 )
-# Add this to agents.py
-translator_agent = create_agent(
-    system_prompt="Translate the user's text into clear English. Output ONLY the English translation, no extra text or explanations."
+# --- 5. Translator Agent (Few-Shot Implementation) ---
+
+translator_examples = [
+    {
+        "input": "en çok satın alınan ürün hangisi",
+        "output": "which product is the most purchased"
+    },
+    {
+        "input": "bu ay en çok harcama yaptığım kategori ne",
+        "output": "which category did I spend the most on this month"
+    },
+    {
+        "input": "bana en son siparişimi göster",
+        "output": "show me my last order"
+    },
+    {
+        "input": "toplam kaç para harcadım",
+        "output": "how much money did I spend in total"
+    },
+    {
+        "input": "bekleyen kargolarımı listele",
+        "output": "list my pending shipments"
+    },
+    {
+        "input": "en pahalı aldığım 3 şey",
+        "output": "my top 3 most expensive purchases"
+    }
+]
+
+translator_example_prompt = ChatPromptTemplate.from_messages([
+    ("human", "{input}"),
+    ("ai", "{output}"),
+])
+
+translator_few_shot_prompt = FewShotChatMessagePromptTemplate(
+    example_prompt=translator_example_prompt,
+    examples=translator_examples,
 )
+
+translator_system_prompt = """You are an expert e-commerce translator. 
+Translate the user's text into clear, database-friendly English.
+Output ONLY the English translation, no extra text, markdown, or explanations.
+Preserve the exact meaning of questions related to categories, products, spending, and orders.
+"""
+
+translator_prompt = ChatPromptTemplate.from_messages([
+    ("system", translator_system_prompt),
+    translator_few_shot_prompt,
+    ("human", "{input}")
+])
+
+translator_agent = translator_prompt | llm
