@@ -91,7 +91,7 @@ def execute_sql_node(state: AgentState):
         
     # 2. [AV-12] Prevent SELECT * Exfiltration and Sensitive Columns Exposure
     sensitive_columns = r"\b(password_hash|internal_cost|supplier_margin|api_key)\b"
-    if "*" in sql or re.search(sensitive_columns, sql.lower()):
+    if re.search(r'\bSELECT\s+\*|,\s*\*|\b[a-zA-Z_]\w*\.\*', sql, re.IGNORECASE) or re.search(sensitive_columns, sql.lower()):
         print("[DEBUG] SECURITY BLOCK: Sensitive column or SELECT * detected.")
         return {"error": "Security Violation: Broad column selection or sensitive data exposure is prohibited.", "query_result": None}
         
